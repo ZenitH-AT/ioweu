@@ -9,7 +9,7 @@ Download the and install the following:
 - A code editor, such as Visual Studio Code
 
 ### **Setting up the app**
-- Open Android Studio, navigate to the AVD manager and create a new virtual device
+- Open Android Studio > Configure > AVD Manager and create a new virtual device
 > Reccomended: Google Pixel 2 with Android 10
 - Start the newly-created AVD
 - Download the GitHub repository (project files)
