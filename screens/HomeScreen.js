@@ -8,10 +8,10 @@ import {
   Image,
   Dimensions,
   TextInput,
-  AsyncStorage,
   Modal,
   TouchableWithoutFeedback
 } from 'react-native';
+import AsyncStorage from '@react-native-community/async-storage';
 import FontAwesome, { parseIconFromClassName } from 'react-native-fontawesome';
 import SplashScreen from 'react-native-splash-screen';
 import Communication from '../utils/communication.js';
@@ -85,18 +85,22 @@ export default class HomeScreen extends Component {
 
     await this.setState({ uid, email });
 
-    const db = firebase.database();
-
     //Retrieving additional user data
-    db.ref(`users/${this.state.uid}`)
+    firebase.database().ref(`users/${this.state.uid}`)
       .on('value', snap => this.setState({
         username: snap.child('username').val(),
         active: snap.child('active').val(),
         activationCode: snap.child('activationCode').val(),
       }));
 
-    //Retrieving groups the user is a member of
-    await db.ref(`members/${this.state.uid}`)
+    await this.getGroupsData();
+    await this.enableResendTimer();
+
+    this.setState({ loading: false });
+  }
+
+  async getGroupsData() {
+    await firebase.database().ref(`members/${this.state.uid}`)
       .once('value', snap => {
         const groupsData = {};
         const groupsNumMembers = {};
@@ -107,7 +111,7 @@ export default class HomeScreen extends Component {
           //Calculating number of group members
           let numMembers = 0;
 
-          db.ref('members').once('value', async (membersSnap) => {
+          firebase.database().ref('members').once('value', async (membersSnap) => {
             await membersSnap.forEach(membersChild => {
               if (membersChild.child(child.key)) {
                 numMembers++;
@@ -116,7 +120,7 @@ export default class HomeScreen extends Component {
           });
 
           //Getting group data
-          db.ref(`groups/${child.key}`).on('value', groupSnap => {
+          firebase.database().ref(`groups/${child.key}`).on('value', groupSnap => {
             groupsData[child.key] = {
               'groupUid': child.key,
               'numMembers': numMembers,
@@ -128,11 +132,16 @@ export default class HomeScreen extends Component {
           });
         });
 
-        this.setState({ groupsData: groupsData, groupsNumMembers, loading: false }); // <<< LOADING STOPS HERE
+        this.setState({ groupsData, groupsNumMembers });
       });
+  }
 
-    //Countdown timer for resend code button (time is remembered across reloads)
-    await this.setState({ resendButtonTimer: await AsyncStorage.getItem('resendButtonTimer') || '0' });
+  //Countdown timer for resend code button (remaining time is remembered across reloads)
+  async enableResendTimer() {
+    const storedTimeRemaining = await AsyncStorage.getItem('resendButtonTimer');
+    const timeRemaining = await isNaN(parseInt(storedTimeRemaining)) ? '0' : storedTimeRemaining;
+
+    this.setState({ resendButtonTimer: timeRemaining });
 
     this.intervalState = setInterval(() =>
       this.setState((prevState) =>
@@ -140,34 +149,6 @@ export default class HomeScreen extends Component {
 
     this.intervalStorage = setInterval(() =>
       AsyncStorage.setItem('resendButtonTimer', `${this.state.resendButtonTimer}`), 1000);
-
-    console.log(JSON.stringify(this.state.groupsData));
-  }
-
-  async getGroupCards() {
-    if (await this.state.numGroups > 0) {
-      const groupsData = await this.state.groupsData;
-
-      return groupsData.map((groupData) => {
-        return (
-          <TouchableOpacity
-            style={styles.groupCard}
-            delayPressIn={50}
-            onPress={() => navigate('GroupHomeScreen', { groupUid: groupData.groupUid })}>
-            <Image
-              style={styles.groupImage}
-              source={{ uri: groupData.imageUrl }}
-            />
-            <View>
-              <Text style={styles.groupName}>{groupData.groupName}</Text>
-              <Text style={styles.groupMembers}>{groupData.numMembers}</Text>
-            </View>
-          </TouchableOpacity>
-        );
-      });
-    } else {
-
-    }
   }
 
   async activateAccount() {
