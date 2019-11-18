@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import {
+  AppState,
   StyleSheet,
   ScrollView,
   View,
@@ -9,7 +10,7 @@ import {
   Dimensions,
   TextInput,
   Modal,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
 } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import FontAwesome, { parseIconFromClassName } from 'react-native-fontawesome';
@@ -57,9 +58,9 @@ export default class HomeScreen extends Component {
 
       //Group data
       numGroups: 0,
-      numInvitations: 3,
       groupsData: null,
-      groupsNumMembers: null,
+      numInvitations: 3,
+      invitationsData: null, //TODO
 
       //For joining a group using an invite code
       joinModalVisible: false,
@@ -97,22 +98,35 @@ export default class HomeScreen extends Component {
     await this.enableResendTimer();
 
     this.setState({ loading: false });
+
+    //Recalculate data if the user navigated back from a newly-created group
+    this.recalculate = this.props.navigation.addListener('willFocus', async () => {
+      if (this.props.navigation.getParam('newGroup')) {
+        this.setState({ numGroups: 0, groupsData: null, loading: true });
+        await this.getGroupsData();
+        this.setState({ loading: false });
+      }
+    });
+  }
+
+  componentWillUnmount() {
+    this.recalculate.remove();
   }
 
   async getGroupsData() {
     await firebase.database().ref(`members/${this.state.uid}`)
       .once('value', snap => {
+        let numGroups = 0;
         const groupsData = {};
-        const groupsNumMembers = {};
 
         snap.forEach(child => {
-          this.setState({ numGroups: this.state.numGroups + 1 });
+          numGroups++;
 
           //Calculating number of group members
           let numMembers = 0;
 
-          firebase.database().ref('members').once('value', async (membersSnap) => {
-            await membersSnap.forEach(membersChild => {
+          firebase.database().ref('members').on('value', async (membersSnap) => {
+            await membersSnap.forEach(async membersChild => {
               if (membersChild.child(child.key)) {
                 numMembers++;
               }
@@ -132,9 +146,11 @@ export default class HomeScreen extends Component {
           });
         });
 
-        this.setState({ groupsData, groupsNumMembers });
+        this.setState({ numGroups, groupsData });
       });
   }
+
+  //getInvitesData
 
   //Countdown timer for resend code button (remaining time is remembered across reloads)
   async enableResendTimer() {

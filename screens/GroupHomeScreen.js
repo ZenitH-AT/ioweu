@@ -21,7 +21,11 @@ export default class GroupHomeScreen extends Component {
       headerTitleStyle: {
         fontWeight: 'bold',
       },
-      headerLeft: (<HeaderBackButton tintColor={'#b5cad5'} onPress={() => { navigation.navigate('HomeScreen') }} />),
+      headerLeft: (<HeaderBackButton tintColor={'#b5cad5'} onPress={() => {
+        navigation.navigate('HomeScreen', {
+          newGroup: navigation.getParam('inviteCode') ? true : false
+        });
+      }} />),
     };
   }
 
