@@ -1,0 +1,233 @@
+import React, { Component } from 'react';
+import { StyleSheet, ScrollView, View, Image, Text, Dimensions } from 'react-native';
+import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
+import FontAwesome, { parseIconFromClassName } from 'react-native-fontawesome';
+import SplashScreen from 'react-native-splash-screen';
+import Validation from '../utils/validation.js';
+
+import * as firebase from 'firebase';
+
+import logo from '../assets/logo.png';
+
+const { width: WIDTH } = Dimensions.get('window');
+
+export default class SignInScreen extends Component {
+  static navigationOptions = {
+    title: 'Sign in',
+    headerStyle: {
+      backgroundColor: '#273238',
+      borderBottomWidth: 1,
+      borderBottomColor: '#496f82',
+    },
+    headerTintColor: '#b5cad5',
+    headerTitleStyle: {
+      fontWeight: 'bold',
+    },
+  }
+
+  constructor() {
+    super();
+
+    this.state = {
+      email: '',
+      emailFromUsername: '',
+      password: '',
+      errorMessage: '',
+
+      //Show/hide password button state
+      showPass: true,
+      press: false,
+    }
+  }
+
+  componentDidMount() {
+    SplashScreen.hide();
+  }
+
+  async handleSignIn() {
+    var { email, password } = this.state;
+
+    if (!Validation.validateEmail(email)) { //Username was provided
+      await this.getEmailFromUsername(email.toLowerCase());
+      email = this.state.emailFromUsername;
+    }
+
+    firebase
+      .auth()
+      .signInWithEmailAndPassword(email, password)
+      .catch(error => this.setState({ errorMessage: error.message }));
+  }
+
+  async getEmailFromUsername(username) {
+    await firebase.database().ref('users').orderByChild('usernameLower').equalTo(username).limitToFirst(1).once('value', snap => {
+      snap.forEach(data => {
+        this.setState({ emailFromUsername: data.child('email').val() });
+      });
+    });
+  }
+
+  showPass() {
+    if (this.state.press == false) {
+      this.setState({ showPass: false, press: true });
+    } else {
+      this.setState({ showPass: true, press: false });
+    }
+  }
+
+  render() {
+    const { navigate } = this.props.navigation;
+
+    return (
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.container}>
+          <View style={styles.logoContainer}>
+            <Image source={logo} style={styles.logoImage} />
+            <Text style={styles.logoText}>Welcome to I Owe U</Text>
+          </View>
+          <View>
+            {this.props.navigation.getParam('infoMessage') && <Text style={styles.infoMessage}>{this.props.navigation.getParam('infoMessage')}</Text>}
+          </View>
+          <View>
+            {this.state.errorMessage != '' && <Text style={styles.errorMessage}>{this.state.errorMessage}</Text>}
+          </View>
+          <TextInput
+            style={styles.input}
+            placeholder={'Username or email'}
+            placeholderTextColor={'#b5cad5'}
+            underlineColorAndroid='transparent'
+            autoCapitalize='none'
+            onChangeText={email => this.setState({ email })}
+            value={this.state.email}
+          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.inputPassword}
+              placeholder={'Password'}
+              secureTextEntry={this.state.showPass}
+              placeholderTextColor={'#b5cad5'}
+              underlineColorAndroid='transparent'
+              autoCapitalize='none'
+              onChangeText={password => this.setState({ password })}
+              value={this.state.password}
+            />
+            <TouchableOpacity
+              onPress={this.showPass.bind(this)}>
+              <FontAwesome style={styles.toggleIcon} icon={this.state.press == false ? parseIconFromClassName('far fa-eye') : parseIconFromClassName('far fa-eye-slash')} />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+            onPress={this.handleSignIn.bind(this)}>
+            <Text style={styles.signInButton}>Sign in</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigate('ForgotScreen')}>
+            <Text style={styles.forgotLink}>Forgot password</Text>
+          </TouchableOpacity>
+          <Text style={styles.subtitle}>Dont have an account?</Text>
+          <TouchableOpacity
+            onPress={() => navigate('SignUpScreen')}>
+            <Text style={styles.signUpLink}>Sign up</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView >
+    );
+  }
+}
+
+const styles = StyleSheet.create({
+  scrollView: {
+    backgroundColor: '#273238',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#273238',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 35,
+  },
+  logoImage: {
+    width: WIDTH - 220,
+    height: WIDTH - 220,
+  },
+  logoText: {
+    color: '#b5cad5',
+    fontSize: 30,
+    fontWeight: '300',
+  },
+  infoMessage: {
+    width: WIDTH - (WIDTH / 7),
+    marginBottom: 25,
+    color: '#30b0db',
+    fontSize: 15,
+    fontWeight: '300',
+    textAlign: 'center',
+  },
+  errorMessage: {
+    width: WIDTH - (WIDTH / 7),
+    marginBottom: 35,
+    color: '#db3b30',
+    fontSize: 15,
+    fontWeight: '300',
+    textAlign: 'center',
+  },
+  input: {
+    width: WIDTH - (WIDTH / 7),
+    height: 45,
+    borderRadius: 25,
+    fontSize: 18,
+    paddingLeft: 25,
+    backgroundColor: '#354249',
+    marginBottom: 25,
+    color: '#dde1e0',
+  },
+  passwordContainer: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  inputPassword: {
+    width: WIDTH - 95,
+    height: 45,
+    borderRadius: 25,
+    fontSize: 18,
+    paddingLeft: 25,
+    backgroundColor: '#354249',
+    marginBottom: 25,
+    color: '#dde1e0',
+  },
+  toggleIcon: {
+    width: 30,
+    lineHeight: 45,
+    marginLeft: 10,
+    color: '#b5cad5',
+    fontSize: 25,
+  },
+  subtitle: {
+    fontSize: 18,
+    color: '#b5cad5',
+  },
+  signInButton: {
+    width: WIDTH / 3,
+    height: 45,
+    borderRadius: 25,
+    fontSize: 26,
+    backgroundColor: '#496f82',
+    textAlign: 'center',
+    marginBottom: 15,
+    color: '#b5cad5',
+    lineHeight: 45,
+  },
+  forgotLink: {
+    fontSize: 20,
+    color: '#d0e2eb',
+    marginBottom: 25,
+  },
+  signUpLink: {
+    fontSize: 24,
+    color: '#d0e2eb',
+    marginBottom: 30,
+  },
+});
