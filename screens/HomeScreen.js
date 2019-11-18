@@ -225,28 +225,38 @@ export default class HomeScreen extends Component {
               }}
               onMomentumScrollEnd={(e) => { this.setState({ screenScrollEnabled: true }); }}
               onScrollEndDrag={(e) => { this.setState({ screenScrollEnabled: true }); }}>
-              {Object.keys(this.state.groupsData).map(key => {
-                const groupData = this.state.groupsData[key];
+              {this.state.numGroups > 0 && (
+                <View>
+                  {Object.keys(this.state.groupsData).map((key, i) => {
+                    const groupData = this.state.groupsData[key];
+                    let cardStyle = styles.groupCard;
 
-                //Displaying group cards
-                return (
-                  <TouchableOpacity
-                    style={styles.groupCard}
-                    delayPressIn={50}
-                    onPress={() => navigate('GroupHomeScreen', { groupUid: groupData.groupUid, groupName: groupData.groupName })}>
-                    <Image
-                      style={styles.groupImage}
-                      source={
-                        groupData.imageUrl == '' ? require('../assets/group-default.png') : { uri: groupData.imageUrl }
-                      }
-                    />
-                    <View>
-                      <Text style={styles.groupName}>{groupData.groupName}</Text>
-                      <Text style={styles.groupMembers}>{groupData.numMembers} {groupData.numMembers == 1 ? 'member' : 'members'}</Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
+                    if (i === Object.keys(this.state.groupsData).length - 1) {
+                      cardStyle = styles.lastGroupCard; //Last card has no bottom border
+                    }
+
+                    //Displaying group cards
+                    return (
+                      <TouchableOpacity
+                        style={cardStyle}
+                        delayPressIn={50}
+                        onPress={() => navigate('GroupHomeScreen', { groupUid: groupData.groupUid, groupName: groupData.groupName })}>
+                        <Image
+                          style={styles.groupImage}
+                          source={
+                            groupData.imageUrl == '' ? require('../assets/group-default.png') : { uri: groupData.imageUrl }
+                          }
+                        />
+                        <View>
+                          <Text style={styles.groupName}>{groupData.groupName}</Text>
+                          <Text style={styles.groupMembers}>{groupData.numMembers} {groupData.numMembers == 1 ? 'member' : 'members'}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+              {this.state.numGroups == 0 && (<View><Text style={styles.noGroups}>No groups to display.</Text></View>)}
             </ScrollView>
             <TouchableOpacity delayPressIn={50}>
               <Text onPress={() => navigate('CreateGroupScreen', { userUid: this.state.uid })}
@@ -479,7 +489,7 @@ const styles = StyleSheet.create({
   },
   sectionCards: {
     maxHeight: HEIGHT / 2.5,
-    marginBottom: 20
+    marginBottom: 20,
   },
   sectionButton: {
     marginBottom: 20,
@@ -501,6 +511,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderColor: '#566f7c'
   },
+  lastGroupCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: WIDTH / 1.25,
+    backgroundColor: '#3a4449',
+    borderRadius: 20,
+    borderColor: '#566f7c'
+  },
   groupImage: {
     width: WIDTH / 7,
     height: WIDTH / 7,
@@ -514,6 +533,12 @@ const styles = StyleSheet.create({
   },
   groupMembers: {
     fontSize: 14,
+    color: '#b5cad5',
+  },
+  noGroups: {
+    width: WIDTH - (WIDTH / 7),
+    textAlign: 'center',
+    fontSize: 18,
     color: '#b5cad5',
   },
   inviteCard: {
