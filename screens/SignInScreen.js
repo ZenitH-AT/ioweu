@@ -3,9 +3,10 @@ import { StyleSheet, ScrollView, View, Image, Text, Dimensions } from 'react-nat
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import FontAwesome, { parseIconFromClassName } from 'react-native-fontawesome';
 import SplashScreen from 'react-native-splash-screen';
-import Validation from '../utils/validation.js';
 
 import * as firebase from 'firebase';
+import miscellaneous from '../utils/miscellaneous.js';
+import validation from '../utils/validation.js';
 
 import logo from '../assets/logo.png';
 
@@ -30,13 +31,17 @@ export default class SignInScreen extends Component {
 
     this.state = {
       email: '',
-      emailFromUsername: '',
       password: '',
       errorMessage: '',
 
       //Show/hide password button state
       showPass: true,
       press: false,
+
+      //Buttons are disabled when the sign in button is pressed
+      signInButtonDisabled: false,
+      forgotButtonDisabled: false,
+      signUpButtonDisabled: false
     }
   }
 
@@ -45,24 +50,34 @@ export default class SignInScreen extends Component {
   }
 
   async handleSignIn() {
+    this.setState({
+      signInButtonDisabled: true,
+      forgotButtonDisabled: true,
+      signUpButtonDisabled: true
+    });
+
     var { email, password } = this.state;
 
-    if (!Validation.validateEmail(email)) { //Username was provided
-      await this.getEmailFromUsername(email.toLowerCase());
-      email = this.state.emailFromUsername;
+    if (!validation.emptyOrWhitespace(email) && !validation.validateEmail(email)) { //Username was provided
+      email = await miscellaneous.getEmailFromUsername(email.toLowerCase());
+
+      if (!email) {
+        return this.handleSignInError('Invalid username or password.');
+      }
     }
 
     firebase
       .auth()
       .signInWithEmailAndPassword(email, password)
-      .catch(error => this.setState({ errorMessage: error.message }));
+      .catch(error => this.handleSignInError(error.message));
   }
 
-  async getEmailFromUsername(username) {
-    await firebase.database().ref('users').orderByChild('usernameLower').equalTo(username).limitToFirst(1).once('value', snap => {
-      snap.forEach(data => {
-        this.setState({ emailFromUsername: data.child('email').val() });
-      });
+  handleSignInError(errorMessage) {
+    this.setState({
+      errorMessage,
+      signInButtonDisabled: false,
+      forgotButtonDisabled: false,
+      signUpButtonDisabled: false
     });
   }
 
@@ -94,8 +109,8 @@ export default class SignInScreen extends Component {
             style={styles.input}
             placeholder={'Username or email'}
             placeholderTextColor={'#b5cad5'}
-            underlineColorAndroid='transparent'
-            autoCapitalize='none'
+            underlineColorAndroid={'transparent'}
+            autoCapitalize={'none'}
             onChangeText={email => this.setState({ email })}
             value={this.state.email}
           />
@@ -105,8 +120,8 @@ export default class SignInScreen extends Component {
               placeholder={'Password'}
               secureTextEntry={this.state.showPass}
               placeholderTextColor={'#b5cad5'}
-              underlineColorAndroid='transparent'
-              autoCapitalize='none'
+              underlineColorAndroid={'transparent'}
+              autoCapitalize={'none'}
               onChangeText={password => this.setState({ password })}
               value={this.state.password}
             />
@@ -116,15 +131,18 @@ export default class SignInScreen extends Component {
             </TouchableOpacity>
           </View>
           <TouchableOpacity
+            disabled={this.state.signInButtonDisabled}
             onPress={this.handleSignIn.bind(this)}>
             <Text style={styles.signInButton}>Sign in</Text>
           </TouchableOpacity>
           <TouchableOpacity
+            disabled={this.state.forgotButtonDisabled}
             onPress={() => navigate('ForgotScreen')}>
             <Text style={styles.forgotLink}>Forgot password</Text>
           </TouchableOpacity>
           <Text style={styles.subtitle}>Dont have an account?</Text>
           <TouchableOpacity
+            disabled={this.state.signUpButtonDisabled}
             onPress={() => navigate('SignUpScreen')}>
             <Text style={styles.signUpLink}>Sign up</Text>
           </TouchableOpacity>

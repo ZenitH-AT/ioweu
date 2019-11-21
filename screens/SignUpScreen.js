@@ -3,11 +3,11 @@ import { StyleSheet, ScrollView, View, Image, Text, Dimensions } from 'react-nat
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import FontAwesome, { parseIconFromClassName } from 'react-native-fontawesome';
 import SplashScreen from 'react-native-splash-screen';
-import Validation from '../utils/validation.js';
-import Storage from '../utils/storage.js';
-import Communication from '../utils/communication.js';
 
 import * as firebase from 'firebase';
+import validation from '../utils/validation.js';
+import storage from '../utils/storage.js';
+import communication from '../utils/communication.js';
 
 const { width: WIDTH } = Dimensions.get('window');
 
@@ -44,8 +44,9 @@ export default class SignUpScreen extends Component {
       showPassConfirm: true,
       pressConfirm: false,
 
-      //The sign up button is disabled when pressed
-      signUpButtonDisabled: false
+      //Buttons are disabled when the sign up button is pressed
+      signUpButtonDisabled: false,
+      chooseButtonDisabled: false
     }
   }
 
@@ -54,25 +55,28 @@ export default class SignUpScreen extends Component {
   }
 
   handleSignUp = async () => {
-    this.setState({ signUpButtonDisabled: true });
+    this.setState({
+      chooseButtonDisabled: true,
+      signUpButtonDisabled: true
+    });
 
     //Validating form
     var errorMessageText = '';
 
-    if (!Validation.validateUsername(this.state.username)) {
+    if (!validation.validateUsername(this.state.username)) {
       errorMessageText += 'Please enter a username between 5 and 30 characters.';
-    } else if (await Validation.valueExists('users', 'usernameLower', this.state.username)) {
+    } else if (await validation.valueExists('users', 'usernameLower', this.state.username.toLowerCase())) {
       errorMessageText += `A user with the username "${this.state.username}" already exists.`;
     }
 
     //Validating email here (because firebase only does it later)
-    if (!Validation.validateEmail(this.state.email)) {
+    if (!validation.validateEmail(this.state.email)) {
       errorMessageText += (errorMessageText.length > 0 ? '\n\n' : '') + 'Please enter a valid email address.';
     }
 
-    if (!Validation.validatePassword(this.state.password)) {
+    if (!validation.validatePassword(this.state.password)) {
       errorMessageText += (errorMessageText.length > 0 ? '\n\n' : '') + 'Password must be 8 characters long, contain at least one lowercase letter, at least one uppercase letter, at least one number and at least one symbol.';
-    } else if (!Validation.comparePasswords(this.state.password, this.state.confirmPassword)) {
+    } else if (!validation.comparePasswords(this.state.password, this.state.confirmPassword)) {
       errorMessageText += (errorMessageText.length > 0 ? '\n\n' : '') + 'Passwords do not match.';
     }
 
@@ -91,7 +95,7 @@ export default class SignUpScreen extends Component {
 
         if (this.state.image) {
           //Uploading image
-          imageUrl = await Storage.uploadImage(this.state.image, `images/user-${userCredentials.user.uid}`);
+          imageUrl = await storage.uploadImage(this.state.image, `images/user-${userCredentials.user.uid}`);
         }
 
         const activationCode = await Math.floor(Math.random() * 90000) + 10000;
@@ -107,7 +111,7 @@ export default class SignUpScreen extends Component {
         });
 
         //Sending activation email to user
-        Communication.sendEmail(
+        communication.sendEmail(
           this.state.email,
           this.state.username,
           'Activate your I Owe U account',
@@ -121,13 +125,17 @@ export default class SignUpScreen extends Component {
           displayName: this.state.username
         });
       } catch (e) {
-        this.setState({ errorMessage: e.message, signUpButtonDisabled: false });
+        this.setState({
+          errorMessage: e.message,
+          chooseButtonDisabled: false,
+          signUpButtonDisabled: false
+        });
       }
     }
   }
 
   updatePasswordStrength = () => {
-    this.setState({ passwordStrength: Validation.scorePassword(this.state.password) });
+    this.setState({ passwordStrength: validation.scorePassword(this.state.password) });
   }
 
   showPass = () => {
@@ -160,8 +168,7 @@ export default class SignUpScreen extends Component {
             style={styles.input}
             placeholder={'Username'}
             placeholderTextColor={'#b5cad5'}
-            underlineColorAndroid='transparent'
-            autoCapitalize='none'
+            underlineColorAndroid={'transparent'}
             onChangeText={username => this.setState({ username })}
             value={this.state.username}
           />
@@ -169,8 +176,8 @@ export default class SignUpScreen extends Component {
             style={styles.input}
             placeholder={'Email address'}
             placeholderTextColor={'#b5cad5'}
-            underlineColorAndroid='transparent'
-            autoCapitalize='none'
+            underlineColorAndroid={'transparent'}
+            autoCapitalize={'none'}
             onChangeText={email => this.setState({ email })}
             value={this.state.email}
           />
@@ -180,8 +187,8 @@ export default class SignUpScreen extends Component {
               placeholder={'Password'}
               secureTextEntry={this.state.showPass}
               placeholderTextColor={'#b5cad5'}
-              underlineColorAndroid='transparent'
-              autoCapitalize='none'
+              underlineColorAndroid={'transparent'}
+              autoCapitalize={'none'}
               onChangeText={password => { this.setState({ password }); this.updatePasswordStrength(); }}
               value={this.state.password}
             />
@@ -197,8 +204,8 @@ export default class SignUpScreen extends Component {
               placeholder={'Confirm password'}
               secureTextEntry={this.state.showPassConfirm}
               placeholderTextColor={'#b5cad5'}
-              underlineColorAndroid='transparent'
-              autoCapitalize='none'
+              underlineColorAndroid={'transparent'}
+              autoCapitalize={'none'}
               onChangeText={confirmPassword => this.setState({ confirmPassword })}
               value={this.state.confirmPassword}
             />
@@ -210,7 +217,8 @@ export default class SignUpScreen extends Component {
           <Text style={styles.profilePictureSubtitle}>Profile picture (optional)</Text>
           <View style={styles.profilePictureContainer}>
             <TouchableOpacity
-              onPress={() => Storage.chooseImage(this)}>
+              disabled={this.state.chooseButtonDisabled}
+              onPress={() => storage.chooseImage(this)}>
               <Text style={styles.profilePictureButton}>Choose image</Text>
             </TouchableOpacity>
             {image && (
@@ -247,10 +255,10 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     width: WIDTH - (WIDTH / 7),
+    marginTop: 25,
+    marginBottom: 25,
     fontSize: 18,
     color: '#b5cad5',
-    marginTop: 30,
-    marginBottom: 25,
   },
   errorMessage: {
     width: WIDTH - (WIDTH / 7),

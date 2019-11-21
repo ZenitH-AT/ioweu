@@ -2,9 +2,10 @@ import React, { Component } from 'react';
 import { StyleSheet, ScrollView, View, Text, Dimensions } from 'react-native';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import SplashScreen from 'react-native-splash-screen';
-import Validation from '../utils/validation.js';
 
 import * as firebase from 'firebase';
+import miscellaneous from '../utils/miscellaneous.js';
+import validation from '../utils/validation.js';
 
 const { width: WIDTH } = Dimensions.get('window');
 
@@ -27,7 +28,6 @@ export default class ForgotScreen extends Component {
 
     this.state = {
       email: null,
-      emailFromUsername: null,
       infoMessage: '',
       errorMessage: '',
       forgotButtonDisabled: false
@@ -46,34 +46,39 @@ export default class ForgotScreen extends Component {
 
     let child = 'email';
 
-    if (!Validation.validateEmail(email)) { //Username was provided
+    if (!validation.validateEmail(email)) { //Username was provided
       child = 'usernameLower';
+      email = email.toLowerCase();
     }
 
     //Searching database
-    if (await Validation.valueExists('users', child, email)) {
+    if (await validation.valueExists('users', child, email)) {
       //Retrieving email from username
       if (child == 'usernameLower') {
-        await this.getEmailFromUsername(email.toLowerCase());
-        email = this.state.emailFromUsername;
+        email = await miscellaneous.getEmailFromUsername(email);
+
+        if (!email) {
+          return this.handleForgotPasswordError('Invalid username or password.');
+        }
+        this.handleForgotPasswordError('An error occurred, please try again.');
       }
 
       try { //Sending password reset email to user
         await firebase.auth().sendPasswordResetEmail(email);
         navigate('SignInScreen', { infoMessage: 'Please check your email for the password reset link.' });
       } catch (error) {
-        this.setState({ infoMessage: '', errorMessage: 'An error occurred, please try again.', forgotButtonDisabled: false });
+        this.handleForgotPasswordError('An error occurred, please try again.');
       }
     } else {
-      this.setState({ infoMessage: '', errorMessage: 'No registered account was found with the provided username or email.', forgotButtonDisabled: false });
+      this.handleForgotPasswordError('No registered account was found with the provided username or email.');
     }
   }
 
-  async getEmailFromUsername(username) {
-    await firebase.database().ref('users').orderByChild('usernameLower').equalTo(username).limitToFirst(1).once('value', snap => {
-      snap.forEach(data => {
-        this.setState({ emailFromUsername: data.child('email').val() });
-      });
+  handleForgotPasswordError(errorMessage) {
+    this.setState({
+      infoMessage: '',
+      errorMessage,
+      forgotButtonDisabled: false
     });
   }
 
@@ -92,8 +97,8 @@ export default class ForgotScreen extends Component {
             style={styles.input}
             placeholder={'Username or email'}
             placeholderTextColor={'#b5cad5'}
-            underlineColorAndroid='transparent'
-            autoCapitalize='none'
+            underlineColorAndroid={'transparent'}
+            autoCapitalize={'none'}
             onChangeText={email => this.setState({ email })}
             value={this.state.email}
           />
@@ -119,10 +124,10 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     width: WIDTH - (WIDTH / 7),
+    marginTop: 25,
+    marginBottom: 25,
     fontSize: 18,
     color: '#b5cad5',
-    marginTop: 30,
-    marginBottom: 25,
   },
   infoMessage: {
     width: WIDTH - (WIDTH / 7),

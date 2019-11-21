@@ -3,7 +3,7 @@ import { StyleSheet, ScrollView, View, Text, Dimensions } from 'react-native';
 //import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import SplashScreen from 'react-native-splash-screen';
 
-//const { width: WIDTH } = Dimensions.get('window');
+const { width: WIDTH } = Dimensions.get('window');
 
 export default class GroupMessagesScreen extends Component {
   static navigationOptions = {
@@ -46,11 +46,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   subtitle: {
+    width: WIDTH - (WIDTH / 7),
+    marginTop: 25,
+    marginBottom: 25,
     fontSize: 18,
     color: '#b5cad5',
-    marginTop: 30,
-    marginLeft: 25,
-    marginRight: 25,
-    marginBottom: 25,
   },
 });

@@ -1,23 +1,15 @@
 import React, { Component } from 'react';
-import {
-  AppState,
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  Dimensions,
-  TextInput,
-  Modal,
-  TouchableWithoutFeedback,
-} from 'react-native';
+import { StyleSheet, ScrollView, View, Text, Image, TouchableWithoutFeedback, TouchableOpacity as RNTouchableOpacity, Dimensions } from 'react-native';
+import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-community/async-storage';
 import FontAwesome, { parseIconFromClassName } from 'react-native-fontawesome';
+import Modal from 'react-native-modal';
 import SplashScreen from 'react-native-splash-screen';
-import Communication from '../utils/communication.js';
 
 import * as firebase from 'firebase';
+import communication from '../utils/communication.js';
+import miscellaneous from '../utils/miscellaneous.js';
+import validation from '../utils/validation.js';
 
 import UserMenu from '../components/UserMenu';
 import logo from '../assets/logo.png';
@@ -59,20 +51,22 @@ export default class HomeScreen extends Component {
       //Group data
       numGroups: 0,
       groupsData: null,
-      numInvitations: 3,
+      numInvitations: 3, //TODO
       invitationsData: null, //TODO
 
       //For joining a group using an invite code
-      joinModalVisible: false,
+      modalVisible: false,
       joinInviteCode: '',
-      modalErrorMessage: 'Invalid invite code.',
+      modalErrorMessage: '',
+      modalJoinButtonDisabled: false,
+      modalHideDisabled: false,
 
       //For account activation
       activationCode: null,
       activationCodeInput: '',
       infoMessage: '',
       errorMessage: '',
-      resendButtonTimer: null,
+      resendEmailCooldown: null,
 
       //For nested ScrollView functionality
       screenScrollEnabled: true,
@@ -95,18 +89,20 @@ export default class HomeScreen extends Component {
       }));
 
     await this.getGroupsData();
-    await this.enableResendTimer();
+    await this.enableResendCooldown();
 
     this.setState({ loading: false });
 
-    //Recalculate data if the user navigated back from a newly-created group
+    //Recalculate groups data if the user navigated back from a newly created/deleted/joined/left group
     this.recalculate = this.props.navigation.addListener('willFocus', async () => {
-      if (this.props.navigation.getParam('newGroup')) {
+      if (this.props.navigation.getParam('recalculateGroupsData')) {
         this.setState({ numGroups: 0, groupsData: null, loading: true });
         await this.getGroupsData();
         this.setState({ loading: false });
       }
     });
+
+    await miscellaneous.useInvite('QslAomE', '-LuE8PcwnJVY_kUvDlHV');
   }
 
   componentWillUnmount() {
@@ -119,24 +115,16 @@ export default class HomeScreen extends Component {
         let numGroups = 0;
         const groupsData = {};
 
-        snap.forEach(child => {
+        snap.forEach(data => {
           numGroups++;
 
-          //Calculating number of group members
-          let numMembers = 0;
-
-          firebase.database().ref('members').on('value', async (membersSnap) => {
-            await membersSnap.forEach(async membersChild => {
-              if (membersChild.child(child.key)) {
-                numMembers++;
-              }
-            });
-          });
+          let groupUid = data.key;
+          let numMembers = 1;
 
           //Getting group data
-          firebase.database().ref(`groups/${child.key}`).on('value', groupSnap => {
-            groupsData[child.key] = {
-              'groupUid': child.key,
+          firebase.database().ref(`groups/${groupUid}`).on('value', groupSnap => {
+            groupsData[groupUid] = {
+              'groupUid': groupUid,
               'numMembers': numMembers,
               'groupName': groupSnap.child('groupName').val(),
               'groupNameLower': groupSnap.child('groupNameLower').val(),
@@ -150,21 +138,73 @@ export default class HomeScreen extends Component {
       });
   }
 
-  //getInvitesData
+  //TODO: getInvitationsData()
+  //For displaying incoming invitation cards
+
+  hideModal() {
+    if (!this.state.hideModalDisabled) {
+      this.setState({ modalVisible: false, modalErrorMessage: '' });
+    }
+  }
+
+  async handleJoinGroup(inviteCode) {
+    const { navigate } = this.props.navigation;
+
+    this.setState({
+      modalJoinButtonDisabled: true,
+      modalHideDisabled: true
+    });
+
+    let modalErrorMessage;
+
+    if (!validation.emptyOrWhitespace(inviteCode)) {
+      const inviteExists = await validation.keyExists('invites', inviteCode);
+
+      if (inviteExists) {
+        let groupUid = await validation.inviteExpired(inviteCode); //Function returns groupUid if not expired
+
+        if (groupUid != true) { //If invite has not expired
+          //Checking if user is already in the group
+          if (!await validation.keyExists(`members/${this.state.uid}`, groupUid)) {
+            //Inserting member records (1: Admin; 0: Regular member)
+            await miscellaneous.setMember(this.state.uid, groupUid, 0);
+            await miscellaneous.useInvite(inviteCode, groupUid);
+
+            this.setState({ modalVisible: false });
+            return navigate('GroupHomeScreen', { groupUid, groupName: await miscellaneous.getGroupName(groupUid), newMember: true });
+          } else {
+            modalErrorMessage = 'You are already in this group.';
+          }
+        } else {
+          modalErrorMessage = 'Invite code expired.';
+        }
+      } else {
+        modalErrorMessage = 'Invite code does not exist.';
+      }
+    } else {
+      modalErrorMessage = 'Please enter an invite code.';
+    }
+
+    return this.setState({
+      modalErrorMessage,
+      modalJoinButtonDisabled: false,
+      modalHideDisabled: false
+    });
+  }
 
   //Countdown timer for resend code button (remaining time is remembered across reloads)
-  async enableResendTimer() {
-    const storedTimeRemaining = await AsyncStorage.getItem('resendButtonTimer');
+  async enableResendCooldown() {
+    const storedTimeRemaining = await AsyncStorage.getItem('resendEmailCooldown');
     const timeRemaining = await isNaN(parseInt(storedTimeRemaining)) ? '0' : storedTimeRemaining;
 
-    this.setState({ resendButtonTimer: timeRemaining });
+    this.setState({ resendEmailCooldown: timeRemaining });
 
     this.intervalState = setInterval(() =>
       this.setState((prevState) =>
-        ({ resendButtonTimer: prevState.resendButtonTimer == 0 ? 0 : prevState.resendButtonTimer - 1 })), 1000);
+        ({ resendEmailCooldown: prevState.resendEmailCooldown == 0 ? 0 : prevState.resendEmailCooldown - 1 })), 1000);
 
     this.intervalStorage = setInterval(() =>
-      AsyncStorage.setItem('resendButtonTimer', `${this.state.resendButtonTimer}`), 1000);
+      AsyncStorage.setItem('resendEmailCooldown', `${this.state.resendEmailCooldown}`), 1000);
   }
 
   async activateAccount() {
@@ -179,9 +219,9 @@ export default class HomeScreen extends Component {
   }
 
   async resendActivationCode() {
-    //Temporarily disabling resend button for two minutes (by setting the button timer)
-    await AsyncStorage.setItem('resendButtonTimer', '120');
-    await this.setState({ resendButtonTimer: '120' });
+    //Temporarily disabling resend button for two minutes
+    await AsyncStorage.setItem('resendEmailCooldown', '120');
+    await this.setState({ resendEmailCooldown: '120' });
 
     const newActivationCode = await Math.floor(Math.random() * 90000) + 10000;
 
@@ -193,7 +233,7 @@ export default class HomeScreen extends Component {
     await this.setState({ activationCode: newActivationCode });
 
     //Send email containing new activation code
-    Communication.sendEmail(
+    communication.sendEmail(
       this.state.email,
       this.state.username,
       'Activate your I Owe U account',
@@ -217,7 +257,7 @@ export default class HomeScreen extends Component {
       <ScrollView style={styles.scrollView} scrollEnabled={this.state.screenScrollEnabled}>
         {this.state.active && ( //Home view
           <View style={styles.container}>
-            <Text style={styles.sectionTitle}>Your groups {(this.state.numGroups > 0) && <Text>({this.state.numGroups})</Text>}</Text>
+            <Text style={styles.title}>Your groups {(this.state.numGroups > 0) && <Text>({this.state.numGroups})</Text>}</Text>
             <ScrollView
               style={styles.sectionCards}
               onTouchStart={(ev) => {
@@ -264,7 +304,7 @@ export default class HomeScreen extends Component {
                 <FontAwesome style={styles.toggleIcon} icon={parseIconFromClassName('fas fa-plus')} />  Create group
               </Text>
             </TouchableOpacity>
-            <Text style={styles.sectionTitle}>Group invitations {(this.state.numInvitations > 0) && <Text>({this.state.numInvitations})</Text>}</Text>
+            <Text style={styles.title}>Group invitations {(this.state.numInvitations > 0) && <Text>({this.state.numInvitations})</Text>}</Text>
             <ScrollView style={styles.sectionCards}
               onTouchStart={(ev) => {
                 this.setState({ screenScrollEnabled: false });
@@ -317,7 +357,7 @@ export default class HomeScreen extends Component {
                   </View>
                 </View>
               </View>
-              <View style={styles.inviteCard}>
+              <View style={styles.lastInviteCard}>
                 <View style={styles.inviteHeader}>
                   <Image
                     style={styles.groupImage}
@@ -343,53 +383,36 @@ export default class HomeScreen extends Component {
             </ScrollView>
             <TouchableOpacity
               delayPressIn={50}
-              onPress={() => { this.setState({ joinModalVisible: !this.state.joinModalVisible }) }}
+              onPress={() => { this.setState({ modalVisible: true }) }}
             >
               <Text style={styles.sectionButton}><FontAwesome style={styles.toggleIcon} icon={parseIconFromClassName('fas fa-door-open')} />  Use invite code</Text>
             </TouchableOpacity>
-
             <Modal
-              style={styles.modal}
-              animationType='slide'
-              transparent={true}
-              style={styles.modal}
-              visible={this.state.joinModalVisible}
-            >
-              <View style={styles.modalBackground}>
-                <TouchableWithoutFeedback onPress={() => {
-                  this.setState({
-                    joinModalVisible: !this.state.joinModalVisible,
-                    modalErrorMessage: ''
-                  })
-                }}>
-                  <View style={styles.modalOuter}>
-                    <TouchableWithoutFeedback onPress={() => { }}>
-                      <View style={styles.modalInner}>
-                        <Text style={styles.modalTitle}>Join group</Text>
-                        <View>
-                          {this.state.modalErrorMessage != '' && <Text style={styles.modalErrorMessage}>{this.state.modalErrorMessage}</Text>}
-                        </View>
-                        <TextInput
-                          style={styles.modalInput}
-                          placeholder={'Invite code'}
-                          placeholderTextColor={'#b5cad5'}
-                          underlineColorAndroid='transparent'
-                          maxLength={7}
-                          onChangeText={joinInviteCode => this.setState({ joinInviteCode })}
-                          value={this.state.joinInviteCode}
-                        />
-                        <View style={styles.modalButtons}>
-                          <TouchableOpacity>
-                            <Text style={styles.modalButton}>Join</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity onPress={() => { this.setState({ joinModalVisible: !this.state.joinModalVisible }) }}>
-                            <Text style={styles.modalButton}>Cancel</Text>
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                    </TouchableWithoutFeedback>
-                  </View>
-                </TouchableWithoutFeedback>
+              isVisible={this.state.modalVisible}
+              onBackButtonPress={() => this.hideModal()}
+              onBackdropPress={() => this.hideModal()}
+              deviceWidth={WIDTH}
+              deviceHeight={HEIGHT}
+              backdropColor={'rgba(29, 36, 40, 0.5)'}>
+              <View style={styles.modal}>
+                <Text style={styles.modalTitle}>Join group</Text>
+                <View>
+                  {this.state.modalErrorMessage != '' && <Text style={styles.modalErrorMessage}>{this.state.modalErrorMessage}</Text>}
+                </View>
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder={'Invite code'}
+                  placeholderTextColor={'#b5cad5'}
+                  underlineColorAndroid={'transparent'}
+                  autoCapitalize={'none'}
+                  maxLength={7}
+                  onChangeText={joinInviteCode => this.setState({ joinInviteCode })}
+                  value={this.state.joinInviteCode}
+                />
+                <View style={styles.modalButtons}>
+                  <RNTouchableOpacity onPress={() => this.handleJoinGroup(this.state.joinInviteCode)}><Text style={styles.modalButton}>Join</Text></RNTouchableOpacity>
+                  <RNTouchableOpacity onPress={() => this.hideModal()}><Text style={styles.modalButton}>Cancel</Text></RNTouchableOpacity>
+                </View>
               </View>
             </Modal>
           </View>
@@ -397,7 +420,7 @@ export default class HomeScreen extends Component {
         {!this.state.active && ( //Activate account view
           <View style={styles.container}>
             <Image source={logo} style={styles.logoImage} />
-            <Text style={styles.title}>Welcome to I Owe U, {this.state.username}!</Text>
+            <Text style={styles.activateTitle}>Welcome to I Owe U, {this.state.username}!</Text>
             <Text style={styles.subtitle}>Before you can create or join a group, you must first enter the activation code sent to your email ({this.state.email}).</Text>
             <View>
               {this.state.infoMessage != '' && <Text style={styles.infoMessage}>{this.state.infoMessage}</Text>}
@@ -409,8 +432,8 @@ export default class HomeScreen extends Component {
               style={styles.input}
               placeholder={'Activation code'}
               placeholderTextColor={'#b5cad5'}
-              underlineColorAndroid='transparent'
-              keyboardType='numeric'
+              underlineColorAndroid={'transparent'}
+              keyboardType={'numeric'}
               maxLength={5}
               onChangeText={activationCodeInput => this.setState({ activationCodeInput })}
               value={`${this.state.activationCodeInput}`} //Using `${}` is important to avoid an invalid prop being supplied
@@ -419,19 +442,20 @@ export default class HomeScreen extends Component {
               <Text style={styles.activateButton}>Activate account</Text>
             </TouchableOpacity>
             <View>
-              {this.state.resendButtonTimer == '0' &&
+              {this.state.resendEmailCooldown == '0' &&
                 <TouchableOpacity onPress={this.resendActivationCode.bind(this)}>
                   <Text style={styles.resendEmailLink}>Resend code</Text>
                 </TouchableOpacity>
               }
             </View>
             <View>
-              {this.state.resendButtonTimer != '0' &&
-                <Text style={styles.resendEmailTimer}>Please wait {this.state.resendButtonTimer} seconds before requesting the code to be resent again.</Text>
+              {this.state.resendEmailCooldown != '0' &&
+                <Text style={styles.resendEmailCooldown}>Please wait {this.state.resendEmailCooldown} seconds before requesting the code to be resent again.</Text>
               }
             </View>
           </View>
-        )}
+        )
+        }
       </ScrollView >
     );
   }
@@ -448,11 +472,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 25,
   },
+  title: {
+    marginTop: 25,
+    marginBottom: 20,
+    color: '#dde1e0',
+    textAlign: 'center',
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
   subtitle: {
     width: WIDTH - (WIDTH / 7),
+    marginTop: 25,
+    marginBottom: 25,
     fontSize: 18,
     color: '#b5cad5',
-    marginBottom: 25,
   },
   infoMessage: {
     width: WIDTH - (WIDTH / 7),
@@ -480,23 +513,17 @@ const styles = StyleSheet.create({
     marginBottom: 25,
     color: '#dde1e0',
   },
-  sectionTitle: {
-    marginTop: 25,
-    fontSize: 22,
-    color: '#dde1e0',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
   sectionCards: {
     maxHeight: HEIGHT / 2.5,
     marginBottom: 20,
   },
   sectionButton: {
-    marginBottom: 20,
+    width: WIDTH / 2.5,
     padding: 6,
     paddingLeft: 10,
     paddingRight: 10,
     borderRadius: 15,
+    textAlign: 'center',
     fontSize: 16,
     color: '#b5cad5',
     backgroundColor: '#496f82',
@@ -549,6 +576,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderColor: '#566f7c'
   },
+  lastInviteCard: {
+    flex: 1,
+    width: WIDTH / 1.25,
+    backgroundColor: '#3a4449',
+    borderRadius: 20,
+    borderColor: '#566f7c'
+  },
   inviteHeader: {
     flex: 1,
     flexDirection: 'row',
@@ -572,54 +606,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   inviteButton: {
+    width: WIDTH / 6,
     marginLeft: WIDTH / 30,
     padding: 4,
     paddingLeft: 8,
     paddingRight: 8,
     borderRadius: 10,
+    textAlign: 'center',
     fontSize: 15,
     color: '#b5cad5',
     backgroundColor: '#496f82',
   },
   modal: {
-    width: WIDTH,
-    height: HEIGHT,
+    flex: 1,
+    position: 'absolute',
     alignSelf: 'center',
-    justifyContent: 'flex-start',
-  },
-  modalBackground: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(29, 36, 40, 0.3)'
-  },
-  modalOuter: {
-    flex: 1,
-  },
-  modalInner: {
     width: WIDTH / 1.4,
-    marginTop: HEIGHT / 4,
-    padding: HEIGHT / 30,
+    marginBottom: HEIGHT / 5,
+    padding: HEIGHT / 35,
     paddingLeft: WIDTH / 15,
     paddingRight: WIDTH / 15,
     backgroundColor: '#485c67',
     borderRadius: 20,
   },
   modalTitle: {
-    textAlign: 'center',
     marginBottom: 15,
     color: '#dde1e0',
+    textAlign: 'center',
     fontSize: 22,
     fontWeight: 'bold',
   },
   modalErrorMessage: {
     marginBottom: 15,
+    paddingBottom: 5,
+    paddingTop: 5,
+    borderRadius: 10,
+    backgroundColor: 'rgba(39, 50, 56, 0.8)',
     color: '#db3b30',
     fontSize: 15,
     fontWeight: '300',
     textAlign: 'center',
-    textShadowColor: 'rgba(39, 50, 56, 0.9)',
-    textShadowRadius: 10
   },
   modalInput: {
     height: 45,
@@ -636,13 +662,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginLeft: WIDTH / 15,
     marginRight: WIDTH / 15,
-    marginBottom: 25,
   },
   modalButton: {
+    width: WIDTH / 6,
     padding: 4,
     paddingLeft: 8,
     paddingRight: 8,
     borderRadius: 10,
+    textAlign: 'center',
     fontSize: 16,
     color: '#b5cad5',
     backgroundColor: '#496f82',
@@ -651,11 +678,10 @@ const styles = StyleSheet.create({
     width: WIDTH - 220,
     height: WIDTH - 220,
   },
-  title: {
+  activateTitle: {
     width: WIDTH - (WIDTH / 7),
     fontSize: 22,
     color: '#b5cad5',
-    marginBottom: 25,
     textAlign: 'center',
   },
   activateButton: {
@@ -673,7 +699,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#d0e2eb',
   },
-  resendEmailTimer: {
+  resendEmailCooldown: {
     width: WIDTH - (WIDTH / 7),
     fontSize: 16,
     color: '#d0e2eb',

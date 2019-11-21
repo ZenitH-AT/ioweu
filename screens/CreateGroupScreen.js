@@ -2,11 +2,12 @@ import React, { Component } from 'react';
 import { StyleSheet, ScrollView, View, Image, Text, Dimensions } from 'react-native';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import SplashScreen from 'react-native-splash-screen';
-import Generation from '../utils/generation.js';
-import Storage from '../utils/storage.js';
-import Validation from '../utils/validation.js';
 
 import * as firebase from 'firebase';
+import generation from '../utils/generation.js';
+import miscellaneous from '../utils/miscellaneous.js';
+import storage from '../utils/storage.js';
+import validation from '../utils/validation.js';
 
 const { width: WIDTH } = Dimensions.get('window');
 
@@ -32,6 +33,9 @@ export default class CreateGroupScreen extends Component {
       paymentOptions: '',
       image: null,
       errorMessage: null,
+
+      //Buttons are disabled when the create group button is pressed
+      chooseButtonDisabled: false,
       createGroupButtonDisabled: false
     }
   }
@@ -43,18 +47,21 @@ export default class CreateGroupScreen extends Component {
   handleCreateGroup = async () => {
     const { navigate } = this.props.navigation;
 
-    this.setState({ createGroupButtonDisabled: true });
+    this.setState({
+      chooseButtonDisabled: true,
+      createGroupButtonDisabled: true
+    });
 
     //Validating form
     var errorMessageText = '';
 
-    if (!Validation.validateUsername(this.state.groupName)) {
+    if (!validation.validateUsername(this.state.groupName)) {
       errorMessageText += 'Please enter a username between 5 and 30 characters.';
-    } else if (await Validation.valueExists('groups', 'groupNameLower', this.state.groupName)) {
+    } else if (await validation.valueExists('groups', 'groupNameLower', this.state.groupName.toLowerCase())) {
       errorMessageText += `A group with the name "${this.state.groupName}" already exists.`;
     }
 
-    if (this.state.paymentOptions === '') {
+    if (validation.emptyOrWhitespace(this.state.paymentOptions)) {
       errorMessageText += (errorMessageText.length > 0 ? '\n\n' : '') + 'Please provide payment options.';
     }
 
@@ -69,7 +76,7 @@ export default class CreateGroupScreen extends Component {
 
         if (this.state.image) {
           //Uploading image
-          imageUrl = await Storage.uploadImage(this.state.image, `images/group-${groupUid}`);
+          imageUrl = await storage.uploadImage(this.state.image, `images/group-${groupUid}`);
         }
 
         const db = firebase.database();
@@ -82,29 +89,29 @@ export default class CreateGroupScreen extends Component {
           paymentOptions: this.state.paymentOptions
         });
 
-        //Inserting member record
-        await db.ref(`members/${this.props.navigation.getParam('userUid')}/${groupUid}`)
-          .set(1); //1: Admin; 0: Regular member
+        //Inserting member records (1: Admin; 0: Regular member)
+        await miscellaneous.setMember(this.props.navigation.getParam('userUid'), groupUid, 1);
 
         let inviteCode;
         let inviteExists = true;
 
         //Checking that the invite code is not present in the database
         if (inviteExists) {
-          inviteCode = await Generation.generateRandomString(7);
-          inviteExists = await Validation.childExists('invites', inviteCode);
+          inviteCode = await generation.generateRandomString(7);
+          inviteExists = await validation.keyExists('invites', inviteCode);
         }
 
-        //Inserting invite record
-        await db.ref(`invites/${inviteCode}`).set({
-          expireTime: new Date().getTime() + 24 * 60 * 60, //Current UNIX timestamp + 24 hours
-          groupUid: groupUid
-        });
+        //Inserting invite records
+        await miscellaneous.setInvite(inviteCode, groupUid);
 
         //Initial invite code is passed as a prop
         return navigate('GroupHomeScreen', { groupUid: groupUid, groupName: this.state.groupName, inviteCode: inviteCode });
       } catch (e) {
-        this.setState({ errorMessage: e.message, createGroupButtonDisabled: false });
+        this.setState({
+          errorMessage: e.message,
+          chooseButtonDisabled: true,
+          createGroupButtonDisabled: true
+        });
       }
     }
   }
@@ -123,15 +130,15 @@ export default class CreateGroupScreen extends Component {
             style={styles.input}
             placeholder={'Group name'}
             placeholderTextColor={'#b5cad5'}
-            underlineColorAndroid='transparent'
-            autoCapitalize='none'
+            underlineColorAndroid={'transparent'}
             onChangeText={groupName => this.setState({ groupName })}
             value={this.state.groupName}
           />
           <Text style={styles.groupPictureSubtitle}>Group picture (optional)</Text>
           <View style={styles.groupPictureContainer}>
             <TouchableOpacity
-              onPress={() => Storage.chooseImage(this)}>
+              disabled={this.state.chooseButtonDisabled}
+              onPress={() => storage.chooseImage(this)}>
               <Text style={styles.groupPictureButton}>Choose image</Text>
             </TouchableOpacity>
             {image && (
@@ -150,8 +157,8 @@ export default class CreateGroupScreen extends Component {
             style={styles.input}
             placeholder={'Payment options'}
             placeholderTextColor={'#b5cad5'}
-            underlineColorAndroid='transparent'
-            autoCapitalize='none'
+            underlineColorAndroid={'transparent'}
+            autoCapitalize={'none'}
             onChangeText={paymentOptions => this.setState({ paymentOptions })}
             value={this.state.paymentOptions}
           />
@@ -179,7 +186,7 @@ const styles = StyleSheet.create({
     width: WIDTH - (WIDTH / 7),
     fontSize: 18,
     color: '#b5cad5',
-    marginTop: 30,
+    marginTop: 25,
     marginBottom: 25,
   },
   errorMessage: {
@@ -201,13 +208,19 @@ const styles = StyleSheet.create({
     color: '#dde1e0',
   },
   groupPictureSubtitle: {
+    // fontSize: 17,
+    // color: '#b5cad5',
+    // textAlign: 'left',
+    // width: WIDTH - 75,
+    // marginLeft: 25,
+    // marginRight: 25,
+    // marginBottom: 20,
+
+
+    width: WIDTH - (WIDTH / 7),
+    marginBottom: 20,
     fontSize: 17,
     color: '#b5cad5',
-    textAlign: 'left',
-    width: WIDTH - 75,
-    marginLeft: 25,
-    marginRight: 25,
-    marginBottom: 20,
   },
   groupPictureContainer: {
     flex: 1,
