@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionButton: {
-    width: WIDTH / 2.5,
+    minWidth: WIDTH / 2.5,
     padding: 6,
     paddingLeft: 10,
     paddingRight: 10,
@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   inviteButton: {
-    width: WIDTH / 6,
+    minWidth: WIDTH / 6,
     marginLeft: WIDTH / 30,
     padding: 4,
     paddingLeft: 8,
@@ -659,7 +659,7 @@ const styles = StyleSheet.create({
     marginRight: WIDTH / 15,
   },
   modalButton: {
-    width: WIDTH / 6,
+    minWidth: WIDTH / 6,
     padding: 4,
     paddingLeft: 8,
     paddingRight: 8,
