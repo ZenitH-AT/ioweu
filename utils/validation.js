@@ -1,6 +1,10 @@
 import * as firebase from 'firebase';
 
 const validation = {
+    emptyOrWhitespace: (string) => {
+        return string === null || string.match(/^ *$/) !== null;
+    },
+
     scorePassword: (pass) => {
         var score = 0;
 
@@ -69,38 +73,36 @@ const validation = {
     },
 
     valueExists: async (parent, child, value) => {
-        const snap = await firebase.database().ref(parent).orderByChild(child).equalTo(value.toLowerCase()).limitToFirst(1).once('value');
+        const snap = await firebase.database().ref(parent).orderByChild(child).equalTo(value).limitToFirst(1).once('value');
 
-        if (await snap.val()) {
-            return true;
-        }
-
-        return false;
+        return await snap.val() ? true : false;
     },
 
-    //Checks if the child key exists (e.g. an invite code)
-    childExists: async (parent, child) => {
-        firebase.database().ref(parent).child(child).once('value', snap => {
-            if (snap.exists()) {
+    keyExists: async (parent, child) => {
+        const snap = await firebase.database().ref(parent).child(child).once('value');
+
+        return snap.exists();
+    },
+
+    inviteExpired: async (inviteCode) => {
+        const dbRef = firebase.database().ref(`invites/${inviteCode}`);
+        var inviteExpired;
+        var groupUid;
+
+        return await dbRef.once('value', snap => {
+            inviteExpired = Math.round(new Date().getTime() / 1000) > parseInt(snap.child('expireTime').val());
+            groupUid = snap.child('groupUid').val();
+        }).then(() => {
+            //Delete invite code and return true if expired, else return groupUid
+            if (inviteExpired) {
+                dbRef.remove();
+                firebase.database().ref(`groups/${groupUid}/invites/${inviteCode}`).remove();
+
                 return true;
+            } else {
+                return groupUid;
             }
         });
-
-        return false;
-    },
-
-    inviteValid: async (inviteCode) => {
-        //check if invite exists
-
-        //if it exists, check if its expire time is valid
-
-        //if its expire time is valid, return the group uid (to join group)
-
-        //otherwise, delete the invite from the database
-
-        //run this method every time a group is opened to clean up old invites
-
-        //return false;
     }
 }
 

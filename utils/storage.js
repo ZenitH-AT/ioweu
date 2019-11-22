@@ -1,3 +1,5 @@
+import { Clipboard } from 'react-native';
+import { WToast } from 'react-native-smart-tip';
 import ImagePicker from 'react-native-image-picker';
 import ImageResizer from 'react-native-image-resizer';
 
@@ -43,6 +45,20 @@ const storage = {
             console.log(`An error occurred while uploading the file.\n\n${e}`);
             throw e;
         }
+    },
+
+    copyText: async (value, message) => {
+        WToast.show({
+            textColor: '#ffffff',
+            backgroundColor: '#3a4449',
+            data: message
+        });
+        
+        return await Clipboard.setString(value);
+    },
+
+    pasteText: async () => {
+        return await Clipboard.getString();
     }
 }
 
