@@ -1,1 +1,16 @@
-check discord
+{
+    "firebase": {
+        "apiKey": "",
+        "authDomain": "",
+        "databaseURL": "",
+        "projectId": "",
+        "storageBucket": "",
+        "messagingSenderId": "",
+        "appId": ""
+    },
+    "sendgrid": {
+        "apiKey": "",
+        "fromEmail": "noreply@ioweu.co.za",
+        "fromName": "No Reply - I Owe U"
+    }
+}
