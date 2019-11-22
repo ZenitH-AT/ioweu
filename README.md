@@ -14,6 +14,7 @@ Download the and install the following:
 - Start the newly-created AVD
 - Download the GitHub repository (project files)
 - Open the project folder in your code editor
+- Set up the config.json file with your own Firebase and SendGrid configuration
 - Open a terminal ("Ctrl + \`" in VS Code) and run the following commands:
 > `npm install`
 > `cd android`
