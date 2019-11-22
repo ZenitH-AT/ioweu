@@ -117,7 +117,7 @@ export default class HomeScreen extends Component {
           numGroups++;
 
           //Getting group data
-          firebase.database().ref(`groups/${data.key}`).on('value', async groupSnap => {
+          firebase.database().ref(`groups/${data.key}`).on('value', async (groupSnap) => {
             groupsData[data.key] = {
               'groupUid': data.key,
               'numMembers': (await miscellaneous.getMembers(data.key)).length,
