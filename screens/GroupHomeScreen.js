@@ -116,10 +116,10 @@ export default class GroupHomeScreen extends Component {
           'imageUrl': snap.child('imageUrl').val(),
           'type': member.type,
         };
+
+        this.setState({ numMembers, membersData });
       });
     });
-
-    this.setState({ numMembers, membersData });
   }
 
   render() {
