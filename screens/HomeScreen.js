@@ -101,8 +101,6 @@ export default class HomeScreen extends Component {
         this.setState({ loading: false });
       }
     });
-
-    await miscellaneous.useInvite('QslAomE', '-LuE8PcwnJVY_kUvDlHV');
   }
 
   componentWillUnmount() {
@@ -118,14 +116,11 @@ export default class HomeScreen extends Component {
         snap.forEach(data => {
           numGroups++;
 
-          let groupUid = data.key;
-          let numMembers = 1;
-
           //Getting group data
-          firebase.database().ref(`groups/${groupUid}`).on('value', groupSnap => {
-            groupsData[groupUid] = {
-              'groupUid': groupUid,
-              'numMembers': numMembers,
+          firebase.database().ref(`groups/${data.key}`).on('value', async groupSnap => {
+            groupsData[data.key] = {
+              'groupUid': data.key,
+              'numMembers': (await miscellaneous.getMembers(data.key)).length,
               'groupName': groupSnap.child('groupName').val(),
               'groupNameLower': groupSnap.child('groupNameLower').val(),
               'imageUrl': groupSnap.child('imageUrl').val(),

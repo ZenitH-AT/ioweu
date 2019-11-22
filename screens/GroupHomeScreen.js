@@ -42,6 +42,7 @@ export default class GroupHomeScreen extends Component {
       uid: '',
       email: '',
       username: '',
+      loading: true,
 
       //For initial invite code (after group creation)
       expiryCountdown: null,
@@ -73,6 +74,8 @@ export default class GroupHomeScreen extends Component {
 
     //Temporary, for testing
     await this.getMembersData();
+
+    this.setState({ loading: false });
   }
 
   async enableExpiryCountdown(inviteCode) {
@@ -102,7 +105,7 @@ export default class GroupHomeScreen extends Component {
 
     const membersData = {};
 
-    Object.keys(members).map(key => {
+    Object.keys(members).map((key, i) => {
       const member = members[key];
 
       //Getting member data
@@ -111,7 +114,7 @@ export default class GroupHomeScreen extends Component {
           'uid': member.uid,
           'username': snap.child('username').val(),
           'imageUrl': snap.child('imageUrl').val(),
-          'type': member.type
+          'type': member.type,
         };
       });
     });
@@ -121,6 +124,10 @@ export default class GroupHomeScreen extends Component {
 
   render() {
     //const { navigate } = this.props.navigation;
+
+    if (this.state.loading) {
+      return <ScrollView style={styles.scrollView}></ScrollView>;
+    }
 
     return (
       <ScrollView style={styles.scrollView}>
