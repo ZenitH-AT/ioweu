@@ -1,4 +1,5 @@
 import * as firebase from 'firebase';
+import validation from './validation';
 
 const miscellaneous = {
     getEmailFromUsername: async (username) => {
@@ -16,8 +17,8 @@ const miscellaneous = {
     setMember: async (userUid, groupUid, type) => {
         const db = firebase.database();
 
-        await db.ref(`members/${userUid}/${groupUid}`).set(type); //To find the groups of a given member
-        await db.ref(`groups/${groupUid}/members/${userUid}`).set(type); //To find the members of a given group
+        await db.ref(`members/${userUid}/${groupUid}`).set({ type }); //To find the groups of a given member
+        await db.ref(`groups/${groupUid}/members/${userUid}`).set({ type }); //To find the members of a given group
     },
 
     setInvite: async (inviteCode, groupUid) => {
@@ -54,10 +55,39 @@ const miscellaneous = {
 
         return await firebase.database().ref(`groups/${groupUid}/members`).once('value', snap => {
             snap.forEach(data => {
-                members.push({ uid: data.key, type: data.val() });
+                members.push({ uid: data.key, type: data.child('type').val() });
             });
         }).then(() => {
             return members;
+        });
+    },
+
+    removeGroup: (groupUid) => {
+        //TODO
+    },
+
+    removeMember: (userUid, groupUids) => {
+        groupUids.forEach(async (groupUid) => {
+            const db = firebase.database();
+            var type; //1: Admin; 0: Regular member
+
+            await db.ref(`members/${userUid}/${groupUid}`).once('value', snap => {
+                type = snap.child('type').val();
+            }).then(async () => {
+                //Removing member
+                // await db.ref(`members/${userUid}/${groupUid}`).remove();
+                // await db.ref(`groups/${groupUid}/members/${userUid}`).remove();
+
+                //If no members remain, remove the group
+                if (!await validation.keyExists(`groups/${groupUid}`, 'members')) {
+                    miscellaneous.removeGroup(groupUid);
+                } else if (type == 1) {
+                    //If no other admins exist in the group, set the first regular member as an admin
+                    if (!await validation.valueExists(`groups/${groupUid}/members`, 'type', 1)) {
+                        //TODO
+                    }
+                }
+            });
         });
     }
 }
