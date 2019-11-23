@@ -21,3 +21,5 @@ Download the and install the following:
 > `./gradlew clean`
 > `cd ..`
 > `npm run android`
+- If android/local.properties was not created, create the file with the following contents:
+> Example (Windows): `sdk.dir=C\:\\Users\\your_user_folder_here\\AppData\\Local\\Android\\Sdk`
