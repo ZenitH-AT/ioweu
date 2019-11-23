@@ -29,27 +29,27 @@ export default class UserMenu extends Component {
 
   _menu = null;
 
-  setMenuRef = ref => {
+  setMenuRef = (ref) => {
     this._menu = ref;
-  };
+  }
 
   showMenu = () => {
     this._menu.show();
-  };
+  }
 
   hideMenu = () => {
     this._menu.hide();
-  };
+  }
 
   updateProfileClick = () => {
     this._menu.hide();
     this.props.updateProfileClick();
-  };
+  }
 
   signOutClick = () => {
     this._menu.hide();
     this.props.signOutClick();
-  };
+  }
 
   render() {
     return (
