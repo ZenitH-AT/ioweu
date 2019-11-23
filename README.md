@@ -14,6 +14,8 @@ Download the and install the following:
 - Start the newly-created AVD
 - Download the GitHub repository (project files)
 - Open the project folder in your code editor
+- Create the android/local.properties file with the following contents:
+> Example (Windows): `sdk.dir=C\:\\Users\\your_user_folder_here\\AppData\\Local\\Android\\Sdk`
 - Set up the config.json file with your own Firebase and SendGrid configuration
 - Open a terminal ("Ctrl + \`" in VS Code) and run the following commands:
 > `npm install`
@@ -21,5 +23,3 @@ Download the and install the following:
 > `./gradlew clean`
 > `cd ..`
 > `npm run android`
-- If android/local.properties was not created, create the file with the following contents:
-> Example (Windows): `sdk.dir=C\:\\Users\\your_user_folder_here\\AppData\\Local\\Android\\Sdk`
