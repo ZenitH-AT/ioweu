@@ -8,12 +8,15 @@ import SignInScreen from './screens/SignInScreen';
 import ForgotScreen from './screens/ForgotScreen';
 import SignUpScreen from './screens/SignUpScreen';
 import HomeScreen from './screens/HomeScreen';
-import ProfileScreen from './screens/ProfileScreen';
-//ProfilePaymentScreen - within edit profile
 import CreateGroupScreen from './screens/CreateGroupScreen';
+import UpdateScreen from './screens/UpdateScreen';
 import GroupHomeScreen from './screens/GroupHomeScreen';
+import GroupMessagesScreen from './screens/GroupMessagesScreen';
+import GroupLedgerScreen from './screens/GroupLedgerScreen';
+import GroupChartsScreen from './screens/GroupChartsScreen';
+import GroupInviteScreen from './screens/GroupInviteScreen';
 import GroupMembersScreen from './screens/GroupMembersScreen';
-//EditGroupScreen + EditGroupPaymentScreen
+import GroupUpdateScreen from './screens/GroupUpdateScreen';
 
 import * as firebase from 'firebase';
 
@@ -33,10 +36,13 @@ firebase.initializeApp(firebaseConfig);
 
 const AppStack = createStackNavigator({
   HomeScreen: { screen: HomeScreen },
-  ProfileScreen: { screen: ProfileScreen },
   CreateGroupScreen: { screen: CreateGroupScreen },
+  UpdateScreen: { screen: UpdateScreen },
   GroupHomeScreen: { screen: GroupHomeScreen },
-  GroupMembersScreen: { screen: GroupMembersScreen }
+  //Tabbed navigation here
+  GroupInviteScreen: { screen: GroupInviteScreen },
+  GroupMembersScreen: { screen: GroupMembersScreen },
+  GroupUpdateScreen: { screen: GroupUpdateScreen }
 });
 
 const AuthStack = createStackNavigator({
