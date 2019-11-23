@@ -22,4 +22,5 @@ Download the and install the following:
 > `cd android`
 > `./gradlew clean`
 > `cd ..`
+> `npm start`
 > `npm run android`
