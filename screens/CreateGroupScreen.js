@@ -4,10 +4,10 @@ import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import SplashScreen from 'react-native-splash-screen';
 
 import * as firebase from 'firebase';
-import generation from '../utils/generation.js';
-import miscellaneous from '../utils/miscellaneous.js';
-import storage from '../utils/storage.js';
-import validation from '../utils/validation.js';
+import generation from '../utils/generation';
+import miscellaneous from '../utils/miscellaneous';
+import storage from '../utils/storage';
+import validation from '../utils/validation';
 
 const { width: WIDTH } = Dimensions.get('window');
 
@@ -199,7 +199,6 @@ const styles = StyleSheet.create({
     marginBottom: 25,
     color: '#db3b30',
     fontSize: 15,
-    fontWeight: '300',
     textAlign: 'center',
   },
   input: {

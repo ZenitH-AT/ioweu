@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, ScrollView, View, Text, Image, TouchableWithoutFeedback, TouchableOpacity as RNTouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, ScrollView, View, Text, Image, TouchableOpacity as RNTouchableOpacity, Dimensions } from 'react-native';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-community/async-storage';
 import FontAwesome, { parseIconFromClassName } from 'react-native-fontawesome';
@@ -7,9 +7,9 @@ import Modal from 'react-native-modal';
 import SplashScreen from 'react-native-splash-screen';
 
 import * as firebase from 'firebase';
-import communication from '../utils/communication.js';
-import miscellaneous from '../utils/miscellaneous.js';
-import validation from '../utils/validation.js';
+import communication from '../utils/communication';
+import miscellaneous from '../utils/miscellaneous';
+import validation from '../utils/validation';
 
 import UserMenu from '../components/UserMenu';
 import logo from '../assets/logo.png';
@@ -31,7 +31,7 @@ export default class HomeScreen extends Component {
       },
       headerRight: () => (
         <UserMenu
-          updateProfileClick={() => { navigation.navigate('ProfileScreen'); }}
+          updateProfileClick={() => { navigation.navigate('UpdateScreen'); }}
           signOutClick={() => { firebase.auth().signOut(); }}
         />
       ),
@@ -433,12 +433,12 @@ export default class HomeScreen extends Component {
               onChangeText={activationCodeInput => this.setState({ activationCodeInput })}
               value={`${this.state.activationCodeInput}`} //Using `${}` is important to avoid an invalid prop being supplied
             />
-            <TouchableOpacity onPress={this.activateAccount.bind(this)}>
+            <TouchableOpacity onPress={() => this.activateAccount()}>
               <Text style={styles.activateButton}>Activate account</Text>
             </TouchableOpacity>
             <View>
               {this.state.resendEmailCooldown == '0' &&
-                <TouchableOpacity onPress={this.resendActivationCode.bind(this)}>
+                <TouchableOpacity onPress={() => this.resendActivationCode()}>
                   <Text style={styles.resendEmailLink}>Resend code</Text>
                 </TouchableOpacity>
               }
@@ -487,7 +487,6 @@ const styles = StyleSheet.create({
     marginBottom: 25,
     color: '#30b0db',
     fontSize: 15,
-    fontWeight: '300',
     textAlign: 'center',
   },
   errorMessage: {
@@ -495,7 +494,6 @@ const styles = StyleSheet.create({
     marginBottom: 25,
     color: '#db3b30',
     fontSize: 15,
-    fontWeight: '300',
     textAlign: 'center',
   },
   input: {
@@ -639,7 +637,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(39, 50, 56, 0.8)',
     color: '#db3b30',
     fontSize: 15,
-    fontWeight: '300',
     textAlign: 'center',
   },
   modalInput: {

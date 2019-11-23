@@ -4,8 +4,8 @@ import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import SplashScreen from 'react-native-splash-screen';
 
 import * as firebase from 'firebase';
-import miscellaneous from '../utils/miscellaneous.js';
-import validation from '../utils/validation.js';
+import miscellaneous from '../utils/miscellaneous';
+import validation from '../utils/validation';
 
 const { width: WIDTH } = Dimensions.get('window');
 
@@ -104,7 +104,7 @@ export default class ForgotScreen extends Component {
           />
           <TouchableOpacity
             disabled={this.state.forgotButtonDisabled}
-            onPress={this.forgotPassword.bind(this)}>
+            onPress={() => this.forgotPassword()}>
             <Text style={styles.forgotButton}>Forgot password</Text>
           </TouchableOpacity>
         </View>
@@ -134,7 +134,6 @@ const styles = StyleSheet.create({
     marginBottom: 25,
     color: '#30b0db',
     fontSize: 15,
-    fontWeight: '300',
     textAlign: 'center',
   },
   errorMessage: {
@@ -142,7 +141,6 @@ const styles = StyleSheet.create({
     marginBottom: 25,
     color: '#db3b30',
     fontSize: 15,
-    fontWeight: '300',
     textAlign: 'center',
   },
   input: {

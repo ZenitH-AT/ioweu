@@ -5,8 +5,8 @@ import FontAwesome, { parseIconFromClassName } from 'react-native-fontawesome';
 import SplashScreen from 'react-native-splash-screen';
 
 import * as firebase from 'firebase';
-import miscellaneous from '../utils/miscellaneous.js';
-import validation from '../utils/validation.js';
+import miscellaneous from '../utils/miscellaneous';
+import validation from '../utils/validation';
 
 import logo from '../assets/logo.png';
 
@@ -130,13 +130,13 @@ export default class SignInScreen extends Component {
               value={this.state.password}
             />
             <TouchableOpacity
-              onPress={this.showPass.bind(this)}>
+              onPress={() => this.showPass()}>
               <FontAwesome style={styles.toggleIcon} icon={this.state.press == false ? parseIconFromClassName('far fa-eye') : parseIconFromClassName('far fa-eye-slash')} />
             </TouchableOpacity>
           </View>
           <TouchableOpacity
             disabled={this.state.signInButtonDisabled}
-            onPress={this.handleSignIn.bind(this)}>
+            onPress={() => this.handleSignIn()}>
             <Text style={styles.signInButton}>Sign in</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -178,14 +178,12 @@ const styles = StyleSheet.create({
   logoText: {
     color: '#b5cad5',
     fontSize: 30,
-    fontWeight: '300',
   },
   infoMessage: {
     width: WIDTH - (WIDTH / 7),
     marginBottom: 25,
     color: '#30b0db',
     fontSize: 15,
-    fontWeight: '300',
     textAlign: 'center',
   },
   errorMessage: {
@@ -193,7 +191,6 @@ const styles = StyleSheet.create({
     marginBottom: 35,
     color: '#db3b30',
     fontSize: 15,
-    fontWeight: '300',
     textAlign: 'center',
   },
   input: {

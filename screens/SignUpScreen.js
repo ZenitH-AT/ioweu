@@ -5,9 +5,9 @@ import FontAwesome, { parseIconFromClassName } from 'react-native-fontawesome';
 import SplashScreen from 'react-native-splash-screen';
 
 import * as firebase from 'firebase';
-import validation from '../utils/validation.js';
-import storage from '../utils/storage.js';
-import communication from '../utils/communication.js';
+import validation from '../utils/validation';
+import storage from '../utils/storage';
+import communication from '../utils/communication';
 
 const { width: WIDTH } = Dimensions.get('window');
 
@@ -54,7 +54,7 @@ export default class SignUpScreen extends Component {
     SplashScreen.hide();
   }
 
-  handleSignUp = async () => {
+  async handleSignUp() {
     this.setState({
       //Disabling buttons
       chooseButtonDisabled: true,
@@ -139,11 +139,11 @@ export default class SignUpScreen extends Component {
     }
   }
 
-  updatePasswordStrength = () => {
+  updatePasswordStrength() {
     this.setState({ passwordStrength: validation.scorePassword(this.state.password) });
   }
 
-  showPass = () => {
+  showPass() {
     if (this.state.press == false) {
       this.setState({ showPass: false, press: true });
     } else {
@@ -151,7 +151,7 @@ export default class SignUpScreen extends Component {
     }
   }
 
-  showPassConfirm = () => {
+  showPassConfirm() {
     if (this.state.pressConfirm == false) {
       this.setState({ showPassConfirm: false, pressConfirm: true });
     } else {
@@ -198,7 +198,7 @@ export default class SignUpScreen extends Component {
               value={this.state.password}
             />
             <TouchableOpacity
-              onPress={this.showPass.bind(this)}>
+              onPress={() => this.showPass()}>
               <FontAwesome style={styles.toggleIcon} icon={this.state.press == false ? parseIconFromClassName('far fa-eye') : parseIconFromClassName('far fa-eye-slash')} />
             </TouchableOpacity>
           </View>
@@ -215,7 +215,7 @@ export default class SignUpScreen extends Component {
               value={this.state.confirmPassword}
             />
             <TouchableOpacity
-              onPress={this.showPassConfirm.bind(this)}>
+              onPress={() => this.showPassConfirm()}>
               <FontAwesome style={styles.toggleIcon} icon={this.state.pressConfirm == false ? parseIconFromClassName('far fa-eye') : parseIconFromClassName('far fa-eye-slash')} />
             </TouchableOpacity>
           </View>
@@ -240,7 +240,7 @@ export default class SignUpScreen extends Component {
           </View>
           <TouchableOpacity
             disabled={this.state.signUpButtonDisabled}
-            onPress={this.handleSignUp}>
+            onPress={() => this.handleSignUp()}>
             <Text style={styles.signUpButton}>Sign up</Text>
           </TouchableOpacity>
         </View>
@@ -270,7 +270,6 @@ const styles = StyleSheet.create({
     marginBottom: 25,
     color: '#db3b30',
     fontSize: 15,
-    fontWeight: '300',
     textAlign: 'center',
   },
   input: {

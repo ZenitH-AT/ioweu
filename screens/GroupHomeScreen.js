@@ -6,10 +6,12 @@ import FontAwesome, { parseIconFromClassName } from 'react-native-fontawesome';
 import SplashScreen from 'react-native-splash-screen';
 
 import * as firebase from 'firebase';
-import generation from '../utils/generation.js';
-import storage from '../utils/storage.js';
-import validation from '../utils/validation.js';
-import miscellaneous from '../utils/miscellaneous.js';
+import generation from '../utils/generation';
+import storage from '../utils/storage';
+import validation from '../utils/validation';
+import miscellaneous from '../utils/miscellaneous';
+
+import GroupMenu from '../components/GroupMenu';
 
 const { width: WIDTH } = Dimensions.get('window');
 
@@ -26,12 +28,24 @@ export default class GroupHomeScreen extends Component {
       headerTitleStyle: {
         fontWeight: 'bold',
       },
-      headerLeft: (<HeaderBackButton tintColor={'#b5cad5'} onPress={() => {
-        navigation.navigate('HomeScreen', {
-          //To recalculate groups data on pressing the back button (if newly created/joined group)
-          recalculateGroupsData: navigation.getParam('inviteCode') ? true : navigation.getParam('newMember') ? true : false
-        });
-      }} />),
+      headerLeft: () => (
+        <HeaderBackButton tintColor={'#b5cad5'} onPress={() => {
+          navigation.navigate('HomeScreen', {
+            //To recalculate groups data on pressing the back button (if newly created/joined group)
+            recalculateGroupsData: navigation.getParam('inviteCode') ? true : navigation.getParam('newMember') ? true : false
+          });
+        }} />
+      ),
+      headerRight: () => (
+        <GroupMenu
+          groupUid={() => { return navigation.getParam('groupUid'); }}
+          groupName={() => { return navigation.getParam('groupName'); }}
+          inviteUsersClick={() => { navigation.navigate('GroupInviteScreen'); }}
+          viewMembersClick={() => { navigation.navigate('GroupMembersScreen'); }}
+          updateGroupClick={() => { navigation.navigate('GroupUpdateScreen'); }}
+          leaveGroup={() => { navigation.navigate('HomeScreen', { recalculateGroupsData: true }) }}
+        />
+      ),
     };
   }
 
