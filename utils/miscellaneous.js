@@ -50,20 +50,52 @@ const miscellaneous = {
         });
     },
 
+    getInvites: async (groupUid) => {
+        var invites = [];
+
+        return await firebase.database().ref(`groups/${groupUid}/invites`).once('value', snap => {
+            snap.forEach(data => {
+                invites.push({
+                    inviteCode: data.key,
+                    expireTime: data.child('expireTime').val(),
+                    uses: data.child('type').val()
+                });
+            });
+        }).then(() => {
+            return invites;
+        });
+    },
+
     getMembers: async (groupUid) => {
         var members = [];
 
         return await firebase.database().ref(`groups/${groupUid}/members`).once('value', snap => {
             snap.forEach(data => {
-                members.push({ uid: data.key, type: data.child('type').val() });
+                members.push({
+                    uid: data.key,
+                    type: data.child('type').val()
+                });
             });
         }).then(() => {
             return members;
         });
     },
 
-    removeGroup: (groupUid) => {
-        //TODO
+    removeGroup: async (groupUid) => {
+        const db = firebase.database();
+
+        //Removing all invites
+        (await miscellaneous.getInvites(groupUid)).forEach(async (invite) => {
+            await db.ref(`invites/${invite.inviteCode}`).remove();
+        });
+
+        //Removing all members
+        (await miscellaneous.getMembers(groupUid)).forEach(async (member) => {
+            await db.ref(`members/${member.uid}/${groupUid}`).remove();
+        });
+
+        //Removing group
+        await db.ref(`groups/${groupUid}`).remove();
     },
 
     removeMember: (userUid, groupUids) => {
@@ -75,16 +107,20 @@ const miscellaneous = {
                 type = snap.child('type').val();
             }).then(async () => {
                 //Removing member
-                // await db.ref(`members/${userUid}/${groupUid}`).remove();
-                // await db.ref(`groups/${groupUid}/members/${userUid}`).remove();
+                await db.ref(`members/${userUid}/${groupUid}`).remove();
+                await db.ref(`groups/${groupUid}/members/${userUid}`).remove();
 
                 //If no members remain, remove the group
                 if (!await validation.keyExists(`groups/${groupUid}`, 'members')) {
-                    miscellaneous.removeGroup(groupUid);
+                    await miscellaneous.removeGroup(groupUid);
                 } else if (type == 1) {
                     //If no other admins exist in the group, set the first regular member as an admin
                     if (!await validation.valueExists(`groups/${groupUid}/members`, 'type', 1)) {
-                        //TODO
+                        await db.ref(`groups/${groupUid}/members`).orderByKey().limitToFirst(1).once('value', snap => {
+                            snap.forEach(async (data) => {
+                                await miscellaneous.setMember(data.key, groupUid, 1);
+                            });
+                        });
                     }
                 }
             });
