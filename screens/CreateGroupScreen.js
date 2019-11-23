@@ -48,15 +48,20 @@ export default class CreateGroupScreen extends Component {
     const { navigate } = this.props.navigation;
 
     this.setState({
+      //Disabling buttons
       chooseButtonDisabled: true,
-      createGroupButtonDisabled: true
+      createGroupButtonDisabled: true,
+
+      //Removing whitespace from fields
+      groupName: this.state.groupName.trim(),
+      paymentOptions: this.state.paymentOptions.trim()
     });
 
     //Validating form
     var errorMessageText = '';
 
-    if (!validation.validateUsername(this.state.groupName)) {
-      errorMessageText += 'Please enter a username between 5 and 30 characters.';
+    if (!validation.validateName(this.state.groupName)) {
+      errorMessageText += 'Please enter a group name between 5 and 30 characters.';
     } else if (await validation.valueExists('groups', 'groupNameLower', this.state.groupName.toLowerCase())) {
       errorMessageText += `A group with the name "${this.state.groupName}" already exists.`;
     }
@@ -208,15 +213,6 @@ const styles = StyleSheet.create({
     color: '#dde1e0',
   },
   groupPictureSubtitle: {
-    // fontSize: 17,
-    // color: '#b5cad5',
-    // textAlign: 'left',
-    // width: WIDTH - 75,
-    // marginLeft: 25,
-    // marginRight: 25,
-    // marginBottom: 20,
-
-
     width: WIDTH - (WIDTH / 7),
     marginBottom: 20,
     fontSize: 17,

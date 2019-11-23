@@ -39,7 +39,7 @@ export default class ForgotScreen extends Component {
   }
 
   async forgotPassword() {
-    this.setState({ forgotButtonDisabled: true });
+    this.setState({ forgotButtonDisabled: true, email: this.state.email.trim() });
 
     const { navigate } = this.props.navigation;
     var email = await this.state.email != null ? this.state.email : 'N/A';

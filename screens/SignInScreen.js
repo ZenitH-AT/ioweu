@@ -51,9 +51,13 @@ export default class SignInScreen extends Component {
 
   async handleSignIn() {
     this.setState({
+      //Disabling buttons
       signInButtonDisabled: true,
       forgotButtonDisabled: true,
-      signUpButtonDisabled: true
+      signUpButtonDisabled: true,
+
+      //Removing whitespace from fields
+      email: this.state.email.trim()
     });
 
     var { email, password } = this.state;

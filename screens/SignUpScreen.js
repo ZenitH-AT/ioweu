@@ -56,14 +56,19 @@ export default class SignUpScreen extends Component {
 
   handleSignUp = async () => {
     this.setState({
+      //Disabling buttons
       chooseButtonDisabled: true,
-      signUpButtonDisabled: true
+      signUpButtonDisabled: true,
+
+      //Removing whitespace from fields
+      username: this.state.username.trim(),
+      email: this.state.email.trim()
     });
 
     //Validating form
     var errorMessageText = '';
 
-    if (!validation.validateUsername(this.state.username)) {
+    if (!validation.validateName(this.state.username)) {
       errorMessageText += 'Please enter a username between 5 and 30 characters.';
     } else if (await validation.valueExists('users', 'usernameLower', this.state.username.toLowerCase())) {
       errorMessageText += `A user with the username "${this.state.username}" already exists.`;
