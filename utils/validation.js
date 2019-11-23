@@ -51,7 +51,7 @@ const validation = {
         }
     },
 
-    validateUsername: (name) => {
+    validateName: (name) => {
         return !(name.length < 5 || name.length > 30);
     },
 
