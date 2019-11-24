@@ -23,7 +23,7 @@ const storage = {
                 //Resizing image
                 ImageResizer.createResizedImage(response.uri, 250, 250, 'JPEG', 100).then((newResponse) => {
                     self.setState({ image: newResponse });
-                }).catch((err) => {
+                }).catch(error => {
                     self.setState({ errorMessage: 'An error occurred while selecting the proifle picture. Please try again.' });
                 });
             }
