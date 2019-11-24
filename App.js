@@ -10,10 +10,7 @@ import SignUpScreen from './screens/SignUpScreen';
 import HomeScreen from './screens/HomeScreen';
 import CreateGroupScreen from './screens/CreateGroupScreen';
 import UpdateScreen from './screens/UpdateScreen';
-import GroupHomeScreen from './screens/GroupHomeScreen';
-import GroupMessagesScreen from './screens/GroupMessagesScreen';
-import GroupLedgerScreen from './screens/GroupLedgerScreen';
-import GroupChartsScreen from './screens/GroupChartsScreen';
+import GroupScreens from './components/GroupScreens';
 import GroupInviteScreen from './screens/GroupInviteScreen';
 import GroupMembersScreen from './screens/GroupMembersScreen';
 import GroupUpdateScreen from './screens/GroupUpdateScreen';
@@ -34,29 +31,28 @@ firebase.initializeApp(firebaseConfig);
 
 /* --- Navigation - START --- */
 
-const AppStack = createStackNavigator({
-  HomeScreen: { screen: HomeScreen },
-  CreateGroupScreen: { screen: CreateGroupScreen },
-  UpdateScreen: { screen: UpdateScreen },
-  GroupHomeScreen: { screen: GroupHomeScreen },
-  //Tabbed navigation here
-  GroupInviteScreen: { screen: GroupInviteScreen },
-  GroupMembersScreen: { screen: GroupMembersScreen },
-  GroupUpdateScreen: { screen: GroupUpdateScreen }
-});
-
 const AuthStack = createStackNavigator({
   SignInScreen: { screen: SignInScreen },
   SignUpScreen: { screen: SignUpScreen },
   ForgotScreen: { screen: ForgotScreen }
 });
 
+const AppStack = createStackNavigator({
+  HomeScreen: { screen: HomeScreen },
+  CreateGroupScreen: { screen: CreateGroupScreen },
+  UpdateScreen: { screen: UpdateScreen },
+  GroupScreens: { screen: GroupScreens },
+  GroupInviteScreen: { screen: GroupInviteScreen },
+  GroupMembersScreen: { screen: GroupMembersScreen },
+  GroupUpdateScreen: { screen: GroupUpdateScreen }
+});
+
 export default createAppContainer(
   createSwitchNavigator(
     {
       LoadingScreen: LoadingScreen,
+      AuthStack: AuthStack,
       AppStack: AppStack,
-      AuthStack: AuthStack
     },
     {
       initialRouteName: 'LoadingScreen'
