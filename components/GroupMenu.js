@@ -21,9 +21,9 @@ export default class GroupMenu extends Component {
   }
 
   async componentDidMount() {
-    firebase.database().ref(`groups/${this.state.groupUid}`)
+    firebase.database().ref(`groups/${this.state.groupUid}/imageUrl`)
       .on('value', snap => this.setState({
-        imageUrl: snap.child('imageUrl').val() == '' ? this.state.imageUrl : { uri: snap.child('imageUrl').val() },
+        imageUrl: snap.val() == '' ? this.state.imageUrl : { uri: snap.val() },
       }));
   }
 
