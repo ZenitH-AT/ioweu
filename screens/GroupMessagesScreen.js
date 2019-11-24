@@ -6,26 +6,11 @@ import SplashScreen from 'react-native-splash-screen';
 const { width: WIDTH } = Dimensions.get('window');
 
 export default class GroupMessagesScreen extends Component {
-  static navigationOptions = {
-    title: 'Messages',
-    headerStyle: {
-      backgroundColor: '#273238',
-      borderBottomWidth: 1,
-      borderBottomColor: '#496f82',
-    },
-    headerTintColor: '#b5cad5',
-    headerTitleStyle: {
-      fontWeight: 'bold',
-    },
-  }
-
   componentDidMount() {
     SplashScreen.hide();
   }
 
   render() {
-    //const { navigate } = this.props.navigation;
-
     return (
       <ScrollView style={styles.scrollView}>
         <View style={styles.container}>
@@ -44,6 +29,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#273238',
     alignItems: 'center',
+    marginBottom: 25,
   },
   subtitle: {
     width: WIDTH - (WIDTH / 7),

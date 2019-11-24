@@ -110,7 +110,7 @@ export default class CreateGroupScreen extends Component {
         await miscellaneous.setInvite(inviteCode, groupUid);
 
         //Initial invite code is passed as a prop
-        return navigate('GroupHomeScreen', { groupUid: groupUid, groupName: this.state.groupName, inviteCode: inviteCode });
+        return navigate('GroupScreens', { groupUid: groupUid, groupName: this.state.groupName, userUid: this.props.navigation.getParam('userUid'), inviteCode: inviteCode });
       } catch (e) {
         this.setState({
           errorMessage: e.message,
@@ -122,8 +122,6 @@ export default class CreateGroupScreen extends Component {
   }
 
   render() {
-    const { image } = this.state;
-
     return (
       <ScrollView style={styles.scrollView}>
         <View style={styles.container}>
@@ -146,13 +144,13 @@ export default class CreateGroupScreen extends Component {
               onPress={() => storage.chooseImage(this)}>
               <Text style={styles.groupPictureButton}>Choose image</Text>
             </TouchableOpacity>
-            {image && (
+            {this.state.image && (
               <Image
-                source={{ uri: image.uri }}
+                source={{ uri: this.state.image.uri }}
                 style={styles.imagePreview}
               />
             )}
-            {!image && (
+            {!this.state.image && (
               <Image
                 style={styles.imagePreview}
               />
@@ -186,6 +184,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#273238',
     alignItems: 'center',
+    marginBottom: 25,
   },
   subtitle: {
     width: WIDTH - (WIDTH / 7),
@@ -256,7 +255,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     backgroundColor: '#496f82',
     textAlign: 'center',
-    marginBottom: 15,
     color: '#b5cad5',
     lineHeight: 45,
   },

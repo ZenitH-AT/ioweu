@@ -160,8 +160,6 @@ export default class SignUpScreen extends Component {
   }
 
   render() {
-    const { image } = this.state;
-
     return (
       <ScrollView style={styles.scrollView}>
         <View style={styles.container}>
@@ -226,13 +224,13 @@ export default class SignUpScreen extends Component {
               onPress={() => storage.chooseImage(this)}>
               <Text style={styles.profilePictureButton}>Choose image</Text>
             </TouchableOpacity>
-            {image && (
+            {this.state.image && (
               <Image
-                source={{ uri: image.uri }}
+                source={{ uri: this.state.image.uri }}
                 style={styles.imagePreview}
               />
             )}
-            {!image && (
+            {!this.state.image && (
               <Image
                 style={styles.imagePreview}
               />
@@ -256,7 +254,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#273238',
-    alignItems: 'center',
+    alignItems: 'center',   
+    marginBottom: 25,
   },
   subtitle: {
     width: WIDTH - (WIDTH / 7),
@@ -361,7 +360,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     backgroundColor: '#496f82',
     textAlign: 'center',
-    marginBottom: 15,
     color: '#b5cad5',
     lineHeight: 45,
   },

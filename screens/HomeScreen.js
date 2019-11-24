@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, ScrollView, View, Text, Image, TouchableOpacity as RNTouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, ScrollView, View, Text, Image, ActivityIndicator, TouchableOpacity as RNTouchableOpacity, Dimensions } from 'react-native';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-community/async-storage';
 import FontAwesome, { parseIconFromClassName } from 'react-native-fontawesome';
@@ -35,7 +35,7 @@ export default class HomeScreen extends Component {
           signOutClick={() => { firebase.auth().signOut(); }}
         />
       ),
-    };
+    }
   }
 
   constructor() {
@@ -117,14 +117,14 @@ export default class HomeScreen extends Component {
           numGroups++;
 
           //Getting group data
-          firebase.database().ref(`groups/${data.key}`).on('value', async (groupSnap) => {
+          firebase.database().ref(`groups/${data.key}`).on('value', async (snap) => {
             groupsData[data.key] = {
               'groupUid': data.key,
               'numMembers': (await miscellaneous.getMembers(data.key)).length,
-              'groupName': groupSnap.child('groupName').val(),
-              'groupNameLower': groupSnap.child('groupNameLower').val(),
-              'imageUrl': groupSnap.child('imageUrl').val(),
-              'paymentOptions': groupSnap.child('paymentOptions').val()
+              'groupName': snap.child('groupName').val(),
+              'groupNameLower': snap.child('groupNameLower').val(),
+              'imageUrl': snap.child('imageUrl').val(),
+              'paymentOptions': snap.child('paymentOptions').val()
             };
           });
         });
@@ -166,7 +166,7 @@ export default class HomeScreen extends Component {
             await miscellaneous.useInvite(inviteCode, groupUid);
 
             this.setState({ modalVisible: false });
-            return navigate('GroupHomeScreen', { groupUid, groupName: await miscellaneous.getGroupName(groupUid), newMember: true });
+            return navigate('GroupScreens', { groupUid, groupName: await miscellaneous.getGroupName(groupUid), userUid: this.state.uid, newMember: true });
           } else {
             modalErrorMessage = 'You are already in this group.';
           }
@@ -275,7 +275,7 @@ export default class HomeScreen extends Component {
                       <TouchableOpacity
                         style={cardStyle}
                         delayPressIn={50}
-                        onPress={() => navigate('GroupHomeScreen', { groupUid: groupData.groupUid, groupName: groupData.groupName })}>
+                        onPress={() => navigate('GroupScreens', { groupUid: groupData.groupUid, groupName: groupData.groupName, userUid: this.state.uid })}>
                         <Image
                           style={styles.groupImage}
                           source={
@@ -388,7 +388,8 @@ export default class HomeScreen extends Component {
               onBackdropPress={() => this.hideModal()}
               deviceWidth={WIDTH}
               deviceHeight={HEIGHT}
-              backdropColor={'rgba(29, 36, 40, 0.5)'}>
+              backdropColor={'rgba(29, 36, 40, 0.5)'}
+              style={{ marginBottom: HEIGHT / 5 }}>
               <View style={styles.modal}>
                 <Text style={styles.modalTitle}>Join group</Text>
                 <View>
@@ -464,7 +465,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#273238',
     alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 25,
   },
   title: {
@@ -615,7 +615,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignSelf: 'center',
     width: WIDTH / 1.4,
-    marginBottom: HEIGHT / 5,
     padding: HEIGHT / 35,
     paddingLeft: WIDTH / 15,
     paddingRight: WIDTH / 15,

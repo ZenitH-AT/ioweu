@@ -120,7 +120,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#273238',
-    alignItems: 'center',
+    alignItems: 'center',   
+    marginBottom: 25,
   },
   subtitle: {
     width: WIDTH - (WIDTH / 7),
@@ -160,7 +161,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     backgroundColor: '#496f82',
     textAlign: 'center',
-    marginBottom: 15,
     color: '#b5cad5',
     lineHeight: 45,
   },

@@ -163,8 +163,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#273238',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center',   
+    marginBottom: 25,
   },
   logoContainer: {
     alignItems: 'center',
@@ -247,6 +247,5 @@ const styles = StyleSheet.create({
   signUpLink: {
     fontSize: 24,
     color: '#d0e2eb',
-    marginBottom: 30,
   },
 });

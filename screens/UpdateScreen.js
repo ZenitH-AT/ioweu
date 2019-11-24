@@ -24,8 +24,6 @@ export default class UpdateScreen extends Component {
   }
 
   render() {
-    //const { navigate } = this.props.navigation;
-
     return (
       <ScrollView style={styles.scrollView}>
         <View style={styles.container}>
@@ -44,6 +42,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#273238',
     alignItems: 'center',
+    marginBottom: 25,
   },
   subtitle: {
     width: WIDTH - (WIDTH / 7),
