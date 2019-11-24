@@ -16,14 +16,25 @@ export default class GroupMenu extends Component {
       groupUid: this.props.groupUid(),
       groupName: this.props.groupName(),
       imageUrl: require('../assets/group-default.png'),
+
+      userUid: this.props.userUid(),
+      type: 0,
+
       modalVisible: false
     }
   }
 
-  async componentDidMount() {
-    firebase.database().ref(`groups/${this.state.groupUid}/imageUrl`)
+  componentDidMount() {
+    const dbRef = firebase.database().ref(`groups/${this.state.groupUid}`);
+
+    dbRef.child('imageUrl')
       .on('value', snap => this.setState({
         imageUrl: snap.val() == '' ? this.state.imageUrl : { uri: snap.val() },
+      }));
+
+    dbRef.child(`members/${this.state.userUid}/type`)
+      .on('value', snap => this.setState({
+        type: snap.val()
       }));
   }
 
@@ -82,7 +93,9 @@ export default class GroupMenu extends Component {
         >
           <MenuItem onPress={this.inviteUsersClick}><Text style={styles.menuItem}>Invite users</Text></MenuItem>
           <MenuItem onPress={this.viewMembersClick}><Text style={styles.menuItem}>View members</Text></MenuItem>
-          <MenuItem onPress={this.updateGroupClick}><Text style={styles.menuItem}>Update group</Text></MenuItem>
+          {this.state.type == 1 && (
+            <MenuItem onPress={this.updateGroupClick}><Text style={styles.menuItem}>Update group</Text></MenuItem>
+          )}
           <MenuItem onPress={this.leaveGroupClick}><Text style={styles.menuItem}>Leave group</Text></MenuItem>
         </Menu>
         <Modal
@@ -91,7 +104,8 @@ export default class GroupMenu extends Component {
           onBackdropPress={() => this.setState({ modalVisible: false })}
           deviceWidth={WIDTH}
           deviceHeight={HEIGHT}
-          backdropColor={'rgba(29, 36, 40, 0.5)'}>
+          backdropColor={'rgba(29, 36, 40, 0.5)'}
+          style={{ marginBottom: HEIGHT / 5 }}>
           <View style={styles.modal}>
             <Text style={styles.modalTitle}>Leave group</Text>
             <Text style={styles.modalSubtitle}>Are you sure you want to leave <Text style={{ fontWeight: 'bold' }}>{this.state.groupName}</Text>?</Text>
@@ -134,7 +148,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignSelf: 'center',
     width: WIDTH / 1.4,
-    marginBottom: HEIGHT / 5,
     padding: HEIGHT / 35,
     paddingLeft: WIDTH / 15,
     paddingRight: WIDTH / 15,
