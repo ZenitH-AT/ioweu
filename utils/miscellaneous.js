@@ -30,21 +30,21 @@ const miscellaneous = {
     },
 
     useInvite: async (inviteCode, groupUid) => {
-        const db = firebase.database();
+        const dbRef = firebase.database().ref(`groups/${groupUid}/invites/${inviteCode}/uses`);
         var currentUses;
 
-        return await db.ref(`groups/${groupUid}/invites/${inviteCode}`).once('value', snap => {
-            currentUses = snap.child('uses').val();
+        return await dbRef.once('value', snap => {
+            currentUses = snap.val();
         }).then(async () => {
-            await db.ref(`groups/${groupUid}/invites/${inviteCode}/uses`).set(currentUses + 1);
+            await dbRef.set(currentUses + 1);
         });
     },
 
     getGroupName: async (groupUid) => {
         var groupName;
 
-        return await firebase.database().ref(`groups/${groupUid}`).once('value', snap => {
-            groupName = snap.child('groupName').val();
+        return await firebase.database().ref(`groups/${groupUid}/groupName`).once('value', snap => {
+            groupName = snap.val();
         }).then(() => {
             return groupName;
         });
@@ -94,6 +94,13 @@ const miscellaneous = {
             await db.ref(`members/${member.uid}/${groupUid}`).remove();
         });
 
+        //Deleting group image if it exists
+        db.ref(`groups/${groupUid}/imageUrl`).once('value', snap => {
+            if (!snap.val() == '') {
+                firebase.storage().ref(`images/group-${groupUid}`).delete().catch(error => console.log(error));
+            }
+        });
+
         //Removing group
         await db.ref(`groups/${groupUid}`).remove();
     },
@@ -101,29 +108,26 @@ const miscellaneous = {
     removeMember: (userUid, groupUids) => {
         groupUids.forEach(async (groupUid) => {
             const db = firebase.database();
-            var type; //1: Admin; 0: Regular member
+            const snap = await db.ref(`members/${userUid}/${groupUid}/type`).once('value');
+            const type = await snap.val(); //1: Admin; 0: Regular member
 
-            await db.ref(`members/${userUid}/${groupUid}`).once('value', snap => {
-                type = snap.child('type').val();
-            }).then(async () => {
-                //Removing member
-                await db.ref(`members/${userUid}/${groupUid}`).remove();
-                await db.ref(`groups/${groupUid}/members/${userUid}`).remove();
+            //Removing member
+            await db.ref(`members/${userUid}/${groupUid}`).remove();
+            await db.ref(`groups/${groupUid}/members/${userUid}`).remove();
 
-                //If no members remain, remove the group
-                if (!await validation.keyExists(`groups/${groupUid}`, 'members')) {
-                    await miscellaneous.removeGroup(groupUid);
-                } else if (type == 1) {
-                    //If no other admins exist in the group, set the first regular member as an admin
-                    if (!await validation.valueExists(`groups/${groupUid}/members`, 'type', 1)) {
-                        await db.ref(`groups/${groupUid}/members`).orderByKey().limitToFirst(1).once('value', snap => {
-                            snap.forEach(async (data) => {
-                                await miscellaneous.setMember(data.key, groupUid, 1);
-                            });
+            //If no members remain, remove the group
+            if (!await validation.keyExists(`groups/${groupUid}`, 'members')) {
+                await miscellaneous.removeGroup(groupUid);
+            } else if (type == 1) {
+                //If no other admins exist in the group, set the first regular member as an admin
+                if (!await validation.valueExists(`groups/${groupUid}/members`, 'type', 1)) {
+                    await db.ref(`groups/${groupUid}/members`).orderByKey().limitToFirst(1).once('value', snap => {
+                        snap.forEach(async (data) => {
+                            await miscellaneous.setMember(data.key, groupUid, 1);
                         });
-                    }
+                    });
                 }
-            });
+            }
         });
     }
 }
