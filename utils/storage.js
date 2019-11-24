@@ -35,7 +35,7 @@ const storage = {
             const response = await fetch(image.uri);
             const blob = await response.blob();
 
-            const snap = await firebase.storage().ref().child(imageName).put(blob, { cacheControl: 'max-age=31536000', contentType: `${image.mime}` });
+            const snap = await firebase.storage().ref(imageName).put(blob, { cacheControl: 'max-age=31536000', contentType: `${image.mime}` });
 
             const downloadURL = await snap.ref.getDownloadURL();
 
