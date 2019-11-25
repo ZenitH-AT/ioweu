@@ -1,16 +1,20 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
-import ActionButton from 'react-native-action-button';
+import { StyleSheet, View, Text, Dimensions } from 'react-native';
+import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
+import FontAwesome, { parseIconFromClassName } from 'react-native-fontawesome';
 
 import * as firebase from 'firebase';
 import miscellaneous from '../utils/miscellaneous';
+
+const { height: HEIGHT } = Dimensions.get('window');
 
 export default class RequestButton extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      groupUid: '-LuOp02L3t7mCMm9Db2t' //TODO
+      requestButtonVisible: true,
+      groupUid: this.props.groupUid
     }
   }
 
@@ -22,19 +26,33 @@ export default class RequestButton extends Component {
 
   render() {
     return (
-      <ActionButton
-        buttonColor='rgba(231,76,60,1)'
-        onPress={() => { alert('hello!') }}
-      />
+      <View>
+        {this.state.requestButtonVisible && (
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => alert(this.state.groupUid)}>
+            <FontAwesome style={styles.actionButtonIcon} icon={parseIconFromClassName('fas fa-exchange-alt')} />
+          </TouchableOpacity>
+        )}
+      </View>
     );
   }
 }
 
 const styles = StyleSheet.create({
   actionButton: {
-
+    position: 'absolute',
+    top: (HEIGHT - 60) - 30,
+    right: 30,
+    height: 60,
+    width: 60,
+    backgroundColor: '#496f82',
+    borderRadius: 50
   },
   actionButtonIcon: {
-
+    color: '#b5cad5',
+    fontSize: 25,
   }
+
+  //Styles for text, modal, etc. here
 });

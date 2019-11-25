@@ -1,4 +1,5 @@
 import React from 'react';
+import { View } from 'react-native';
 import { createMaterialTopTabNavigator } from 'react-navigation-tabs';
 import { HeaderBackButton } from 'react-navigation-stack';
 
@@ -8,6 +9,16 @@ import GroupLedgerScreen from '../screens/GroupLedgerScreen';
 import GroupChartsScreen from '../screens/GroupChartsScreen';
 
 import GroupMenu from './GroupMenu';
+import RequestButton from './RequestButton';
+
+/*
+TODO:
+
+- Some screens may need componentWillUnmount to recalculate certain data
+- Center tabs correctly without wrapping; tab widths should be as long as needed
+- When on messages screen, request button should not be shown (pass requestButtonVisible prop)
+
+*/
 
 const GroupScreens = createMaterialTopTabNavigator(
   {
@@ -37,16 +48,19 @@ const GroupScreens = createMaterialTopTabNavigator(
         }} />
       ),
       headerRight: () => (
-        <GroupMenu
-          groupUid={() => { return navigation.getParam('groupUid'); }}
-          groupName={() => { return navigation.getParam('groupName'); }}
-          userUid={() => { return navigation.getParam('userUid'); }}
-          inviteUsersClick={() => { navigation.navigate('GroupInviteScreen', { groupUid: navigation.getParam('groupUid') }); }}
-          viewMembersClick={() => { navigation.navigate('GroupMembersScreen', { groupUid: navigation.getParam('groupUid'), userUid: navigation.getParam('userUid') }); }}
-          updateGroupClick={() => { navigation.navigate('GroupUpdateScreen', { groupUid: navigation.getParam('groupUid') }); }}
-          leaveGroup={() => { navigation.navigate('HomeScreen', { recalculateGroupsData: true }); }}
-        />
-      ),
+        <View>
+          <GroupMenu
+            groupUid={() => { return navigation.getParam('groupUid'); }}
+            groupName={() => { return navigation.getParam('groupName'); }}
+            userUid={() => { return navigation.getParam('userUid'); }}
+            inviteUsersClick={() => { navigation.navigate('GroupInviteScreen', { groupUid: navigation.getParam('groupUid') }); }}
+            viewMembersClick={() => { navigation.navigate('GroupMembersScreen', { groupUid: navigation.getParam('groupUid'), userUid: navigation.getParam('userUid') }); }}
+            updateGroupClick={() => { navigation.navigate('GroupUpdateScreen', { groupUid: navigation.getParam('groupUid') }); }}
+            leaveGroup={() => { navigation.navigate('HomeScreen', { recalculateGroupsData: true }); }}
+          />
+          <RequestButton groupUid={navigation.getParam('groupUid')} />
+        </View>
+      )
     }),
     tabBarOptions: {
       activeTintColor: '#b5cad5',
