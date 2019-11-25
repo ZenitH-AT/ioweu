@@ -5,6 +5,27 @@ import SplashScreen from 'react-native-splash-screen';
 
 const { width: WIDTH } = Dimensions.get('window');
 
+/*
+TODO:
+
+- fields include:
+> username
+> old password
+> new password
+> confirm new password
+- delete account button
+> enter full email and password to confirm
+> deletes user image if exists
+> calls removeMember(userUid, [groupUids]), passing all the users groups if any
+- username is only updated if the new one is different from the current one
+- updating image should delete the old one
+- updating payment info should ask the user to enter their password to continue then navigate to another screen 
+- rate limit updating account, similar to the homescreen resend timer
+
+NOTE: removeMember may not work correctly with multiple groups, still must be tested
+
+*/
+
 export default class UpdateScreen extends Component {
   static navigationOptions = {
     title: 'Update profile',

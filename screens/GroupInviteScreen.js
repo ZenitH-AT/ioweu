@@ -5,6 +5,21 @@ import SplashScreen from 'react-native-splash-screen';
 
 const { width: WIDTH } = Dimensions.get('window');
 
+/*
+
+TODO:
+
+- invite users via username/email (send push notification to user)
+- invites can be created to expire or never expire
+- x/5 invites (+ create button blurs when full)
+- delete button for each invite
+- simple create invite modal with enableExpiryCooldowns(groupUid) option
+- delete expired invites automatically
+
+Design example: https://i.ibb.co/JsJVjvZ/unknown.png
+
+*/
+
 export default class GroupInviteScreen extends Component {
   static navigationOptions = {
     title: 'Invite users',

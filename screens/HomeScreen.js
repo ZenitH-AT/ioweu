@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, ScrollView, View, Text, Image, ActivityIndicator, TouchableOpacity as RNTouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, ScrollView, View, Text, Image, TouchableOpacity as RNTouchableOpacity, Dimensions } from 'react-native';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-community/async-storage';
 import FontAwesome, { parseIconFromClassName } from 'react-native-fontawesome';
@@ -296,7 +296,7 @@ export default class HomeScreen extends Component {
             <TouchableOpacity delayPressIn={50}>
               <Text onPress={() => navigate('CreateGroupScreen', { userUid: this.state.uid })}
                 style={styles.sectionButton}>
-                <FontAwesome style={styles.toggleIcon} icon={parseIconFromClassName('fas fa-plus')} />  Create group
+                <FontAwesome icon={parseIconFromClassName('fas fa-plus')} />  Create group
               </Text>
             </TouchableOpacity>
             <Text style={styles.title}>Group invitations {(this.state.numInvitations > 0) && <Text>({this.state.numInvitations})</Text>}</Text>
@@ -378,9 +378,8 @@ export default class HomeScreen extends Component {
             </ScrollView>
             <TouchableOpacity
               delayPressIn={50}
-              onPress={() => { this.setState({ modalVisible: true }) }}
-            >
-              <Text style={styles.sectionButton}><FontAwesome style={styles.toggleIcon} icon={parseIconFromClassName('fas fa-door-open')} />  Use invite code</Text>
+              onPress={() => { this.setState({ modalVisible: true }) }}>
+              <Text style={styles.sectionButton}><FontAwesome icon={parseIconFromClassName('fas fa-door-open')} />  Use invite code</Text>
             </TouchableOpacity>
             <Modal
               isVisible={this.state.modalVisible}

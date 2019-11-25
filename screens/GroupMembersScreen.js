@@ -8,6 +8,18 @@ import miscellaneous from '../utils/miscellaneous';
 
 const { width: WIDTH } = Dimensions.get('window');
 
+/*
+TODO:
+
+- member cards should have view image, promote (use setMember()), kick (use removeMember()); recalculate on change 
+- promote and kick buttons should not be shown for regular users
+- promote button should not be shown on an admin user
+- promote and kick buttons should not be shown on the member card for the member who is viewing the list
+> i.e. a member cannot kick themselves
+- indicator icons for admin members and online members
+
+*/
+
 export default class GroupMembersScreen extends Component {
   static navigationOptions = {
     title: 'Members',
