@@ -12,12 +12,12 @@ ITSP300 group project
 > Reccomended: Google Pixel 2 with Android 10
 - Start the newly-created AVD
 - Create a new react native app:
-> Create a new folder and open a console window at its location
-> Type npm install -g create-react-native-app
-> Type create-react-native-app ioweu
-> Select "Plain JavaScript"
-> Set the name to "I Owe U" ("ioweu" is the slug)
-> Type `expo eject` and select "Blank"
+* Create a new folder and open a console window at its location
+* Type npm install -g create-react-native-app
+* Type create-react-native-app ioweu
+* Select "Plain JavaScript"
+* Set the name to "I Owe U" ("ioweu" is the slug)
+* Type `expo eject` and select "Blank"
 - Download the GitHub repository (project files)
 - Merge the repository with your existing app files
 - Create the android/local.properties file with the following contents:
