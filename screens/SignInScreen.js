@@ -49,11 +49,8 @@ export default class SignInScreen extends Component {
     SplashScreen.hide();
   }
 
-  //Ensures that validation uses trimmed values
-  promisedSetState = (newState) => new Promise(resolve => this.setState(newState, resolve));
-
   async handleSignIn() {
-    await this.promisedSetState({
+    await miscellaneous.promisedSetState({
       //Disabling buttons
       signInButtonDisabled: true,
       forgotButtonDisabled: true,
@@ -61,7 +58,7 @@ export default class SignInScreen extends Component {
 
       //Removing whitespace from fields
       email: this.state.email.trim()
-    });
+    }, this);
 
     var { email, password } = this.state;
 

@@ -39,10 +39,16 @@ export default class ForgotScreen extends Component {
   }
 
   async forgotPassword() {
-    this.setState({ forgotButtonDisabled: true, email: this.state.email.trim() });
-
     const { navigate } = this.props.navigation;
-    var email = await this.state.email != null ? this.state.email : 'N/A';
+
+    await miscellaneous.promisedSetState({
+      forgotButtonDisabled: true,
+      email: this.state.email.trim()
+    }, this);
+
+    let errorMessage;
+
+    let email = await this.state.email != null ? this.state.email : 'N/A';
 
     let child = 'email';
 
@@ -58,24 +64,22 @@ export default class ForgotScreen extends Component {
         email = await miscellaneous.getEmailFromUsername(email);
 
         if (!email) {
-          return this.handleForgotPasswordError('Invalid username or password.');
+          errorMessage = 'Invalid username or password.';
         }
-        this.handleForgotPasswordError('An error occurred, please try again.');
       }
 
       try { //Sending password reset email to user
         await firebase.auth().sendPasswordResetEmail(email);
-        navigate('SignInScreen', { infoMessage: 'Please check your email for the password reset link.' });
+
+        return navigate('SignInScreen', { infoMessage: 'Please check your email for the password reset link.' });
       } catch (error) {
-        this.handleForgotPasswordError('An error occurred, please try again.');
+        errorMessage = 'An error occurred, please try again.';
       }
     } else {
-      this.handleForgotPasswordError('No registered account was found with the provided username or email.');
+      errorMessage = 'No registered account was found with the provided username or email.';
     }
-  }
 
-  handleForgotPasswordError(errorMessage) {
-    this.setState({
+    return this.setState({
       infoMessage: '',
       errorMessage,
       forgotButtonDisabled: false
@@ -120,7 +124,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#273238',
-    alignItems: 'center',   
+    alignItems: 'center',
     marginBottom: 25,
   },
   subtitle: {

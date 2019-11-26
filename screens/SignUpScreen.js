@@ -5,9 +5,10 @@ import FontAwesome, { parseIconFromClassName } from 'react-native-fontawesome';
 import SplashScreen from 'react-native-splash-screen';
 
 import * as firebase from 'firebase';
-import validation from '../utils/validation';
-import storage from '../utils/storage';
 import communication from '../utils/communication';
+import miscellaneous from '../utils/miscellaneous';
+import storage from '../utils/storage';
+import validation from '../utils/validation';
 
 const { width: WIDTH } = Dimensions.get('window');
 
@@ -54,11 +55,8 @@ export default class SignUpScreen extends Component {
     SplashScreen.hide();
   }
 
-  //Ensures that validation uses trimmed values
-  promisedSetState = (newState) => new Promise(resolve => this.setState(newState, resolve));
-
   async handleSignUp() {
-    await this.promisedSetState({
+    await miscellaneous.promisedSetState({
       //Disabling buttons
       chooseButtonDisabled: true,
       signUpButtonDisabled: true,
@@ -66,7 +64,7 @@ export default class SignUpScreen extends Component {
       //Removing whitespace from fields
       username: this.state.username.trim(),
       email: this.state.email.trim()
-    });
+    }, this);
 
     //Validating form
     var errorMessageText = '';

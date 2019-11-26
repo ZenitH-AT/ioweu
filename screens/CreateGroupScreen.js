@@ -44,13 +44,10 @@ export default class CreateGroupScreen extends Component {
     SplashScreen.hide();
   }
 
-  //Ensures that validation uses trimmed values
-  promisedSetState = (newState) => new Promise(resolve => this.setState(newState, resolve));
-
   async handleCreateGroup() {
     const { navigate } = this.props.navigation;
 
-    await this.promisedSetState({
+    await miscellaneous.promisedSetState({
       //Disabling buttons
       chooseButtonDisabled: true,
       createGroupButtonDisabled: true,
@@ -58,7 +55,7 @@ export default class CreateGroupScreen extends Component {
       //Removing whitespace from fields
       groupName: this.state.groupName.trim(),
       paymentOptions: this.state.paymentOptions.trim()
-    });
+    }, this);
 
     //Validating form
     var errorMessageText = '';
