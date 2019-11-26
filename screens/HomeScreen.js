@@ -665,8 +665,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#496f82',
   },
   logoImage: {
-    width: WIDTH - 220,
-    height: WIDTH - 220,
+    width: WIDTH - (WIDTH / 2),
+    height: WIDTH - (WIDTH / 2),
   },
   activateTitle: {
     width: WIDTH - (WIDTH / 7),

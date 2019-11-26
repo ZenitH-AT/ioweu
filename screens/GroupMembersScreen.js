@@ -22,7 +22,7 @@ TODO:
 
 export default class GroupMembersScreen extends Component {
   static navigationOptions = {
-    title: 'Members',
+    title: 'View members',
     headerStyle: {
       backgroundColor: '#273238',
       borderBottomWidth: 1,

@@ -172,8 +172,8 @@ const styles = StyleSheet.create({
     marginBottom: 35,
   },
   logoImage: {
-    width: WIDTH - 220,
-    height: WIDTH - 220,
+    width: WIDTH - (WIDTH / 2),
+    height: WIDTH - (WIDTH / 2),
   },
   logoText: {
     color: '#b5cad5',
