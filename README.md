@@ -1,9 +1,10 @@
 # I Owe U
 ITSP300 group project
 
-### **Required software for the development environment**
-- Android Studio (for the SDK and AVD)
-> You may also use your device with USB debugging turned on, or another emulator, such as Genymotion
+### **Required/recommended tools for development**
+- Android SDK and an Android Virtual Device or Android emulator
+Android Studio (for the SDK, Gradle and optional AVD)
+> Instead of the AVD, you may use your Android device with USB debugging enabled, or an emulator (e.g. Genymotion)
 - Node.js
 - A code editor, such as Visual Studio Code
 
