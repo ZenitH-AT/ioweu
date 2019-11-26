@@ -44,10 +44,13 @@ export default class CreateGroupScreen extends Component {
     SplashScreen.hide();
   }
 
-  handleCreateGroup = async () => {
+  //Ensures that validation uses trimmed values
+  promisedSetState = (newState) => new Promise(resolve => this.setState(newState, resolve));
+
+  async handleCreateGroup() {
     const { navigate } = this.props.navigation;
 
-    this.setState({
+    await this.promisedSetState({
       //Disabling buttons
       chooseButtonDisabled: true,
       createGroupButtonDisabled: true,
@@ -167,7 +170,7 @@ export default class CreateGroupScreen extends Component {
           />
           <TouchableOpacity
             disabled={this.state.createGroupButtonDisabled}
-            onPress={this.handleCreateGroup}>
+            onPress={() => this.handleCreateGroup()}>
             <Text style={styles.createGroupButton}>Create group</Text>
           </TouchableOpacity>
         </View>

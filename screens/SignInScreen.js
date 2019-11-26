@@ -49,8 +49,11 @@ export default class SignInScreen extends Component {
     SplashScreen.hide();
   }
 
+  //Ensures that validation uses trimmed values
+  promisedSetState = (newState) => new Promise(resolve => this.setState(newState, resolve));
+
   async handleSignIn() {
-    this.setState({
+    await this.promisedSetState({
       //Disabling buttons
       signInButtonDisabled: true,
       forgotButtonDisabled: true,

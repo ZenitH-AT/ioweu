@@ -54,8 +54,11 @@ export default class SignUpScreen extends Component {
     SplashScreen.hide();
   }
 
+  //Ensures that validation uses trimmed values
+  promisedSetState = (newState) => new Promise(resolve => this.setState(newState, resolve));
+
   async handleSignUp() {
-    this.setState({
+    await this.promisedSetState({
       //Disabling buttons
       chooseButtonDisabled: true,
       signUpButtonDisabled: true,
