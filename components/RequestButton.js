@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, Text, Dimensions } from 'react-native';
-import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
+import { StyleSheet, View, Text, Dimensions, TouchableOpacity } from 'react-native';
+import { TextInput } from 'react-native-gesture-handler';
 import FontAwesome, { parseIconFromClassName } from 'react-native-fontawesome';
 
 import * as firebase from 'firebase';
