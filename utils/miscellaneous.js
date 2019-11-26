@@ -2,6 +2,11 @@ import * as firebase from 'firebase';
 import validation from './validation';
 
 const miscellaneous = {
+    promisedSetState: async (newState, self) => {
+        //Ensures that validation uses trimmed values
+        new Promise(resolve => self.setState(newState, resolve));
+    },
+
     getEmailFromUsername: async (username) => {
         var email;
 
