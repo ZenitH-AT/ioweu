@@ -31,4 +31,4 @@ ITSP300 group project
 > `cd ..`
 > `npm start`
 > `npm run android`
-- If you have any additional errors, see ![here](https://rentry.co/tpvus)
+- If you encounter any additional issues, see ![here](https://rentry.co/tpvus)
