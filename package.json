@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@react-native-community/async-storage": "^1.6.3",
+    "@react-native-community/netinfo": "^4.6.1",
     "expo": "^34.0.1",
     "firebase": "^7.2.1",
     "jetifier": "^1.6.4",

@@ -4,6 +4,7 @@ import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 
 import LoadingScreen from './screens/LoadingScreen';
+import ErrorScreen from './screens/ErrorScreen';
 import SignInScreen from './screens/SignInScreen';
 import ForgotScreen from './screens/ForgotScreen';
 import SignUpScreen from './screens/SignUpScreen';
@@ -51,8 +52,9 @@ export default createAppContainer(
   createSwitchNavigator(
     {
       LoadingScreen: LoadingScreen,
+      ErrorScreen: createStackNavigator({ ErrorScreen }),
       AuthStack: AuthStack,
-      AppStack: AppStack,
+      AppStack: AppStack
     },
     {
       initialRouteName: 'LoadingScreen'
@@ -62,16 +64,16 @@ export default createAppContainer(
 
 /* --- Navigation - END --- */
 
-//Remove timer warnings
+//Remove unnecessary warnings
 import { YellowBox } from 'react-native';
 import _ from 'lodash';
 
-YellowBox.ignoreWarnings(['Setting a timer']);
+YellowBox.ignoreWarnings(['Setting a timer', 'RNCNetInfo']);
 
 const _console = _.clone(console);
 
 console.warn = message => {
-  if (message.indexOf('Setting a timer') <= -1) {
+  if (message.indexOf('Setting a timer') <= -1 || message.indexOf('RNCNetInfo') <= -1) {
     _console.warn(message);
   }
 };
