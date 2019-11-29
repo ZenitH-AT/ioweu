@@ -85,7 +85,7 @@ export default class HomeScreen extends Component {
       .on('value', snap => this.setState({
         username: snap.child('username').val(),
         active: snap.child('active').val(),
-        activationCode: snap.child('activationCode').val(),
+        activationCode: snap.child('activationCode').val()
       }));
 
     await this.getGroupsData();
@@ -117,16 +117,17 @@ export default class HomeScreen extends Component {
           numGroups++;
 
           //Getting group data
-          firebase.database().ref(`groups/${data.key}`).on('value', async (snap) => {
-            groupsData[data.key] = {
-              'groupUid': data.key,
-              'numMembers': (await miscellaneous.getMembers(data.key)).length,
-              'groupName': snap.child('groupName').val(),
-              'groupNameLower': snap.child('groupNameLower').val(),
-              'imageUrl': snap.child('imageUrl').val(),
-              'paymentOptions': snap.child('paymentOptions').val()
-            };
-          });
+          firebase.database().ref(`groups/${data.key}`)
+            .on('value', async (snap) => {
+              groupsData[data.key] = {
+                'groupUid': data.key,
+                'numMembers': (await miscellaneous.getMembers(data.key)).length,
+                'groupName': snap.child('groupName').val(),
+                'groupNameLower': snap.child('groupNameLower').val(),
+                'imageUrl': snap.child('imageUrl').val(),
+                'paymentOptions': snap.child('paymentOptions').val()
+              };
+            });
         });
 
         this.setState({ numGroups, groupsData });
@@ -166,7 +167,7 @@ export default class HomeScreen extends Component {
             await miscellaneous.useInvite(inviteCode, groupUid);
 
             this.setState({ modalVisible: false });
-            return navigate('GroupScreens', { groupUid, groupName: await miscellaneous.getGroupName(groupUid), userUid: this.state.uid, newMember: true });
+            return navigate('GroupScreens', { groupUid, groupName: await miscellaneous.getGroupName(groupUid), userUid: this.state.uid, membersData: await miscellaneous.getMembersData(groupUid), newMember: true });
           } else {
             modalErrorMessage = 'You are already in this group.';
           }
@@ -255,9 +256,9 @@ export default class HomeScreen extends Component {
             <Text style={styles.title}>Your groups {(this.state.numGroups > 0) && <Text>({this.state.numGroups})</Text>}</Text>
             <ScrollView
               style={styles.sectionCards}
-              onTouchStart={(ev) => {
-                this.setState({ screenScrollEnabled: false });
-              }}
+
+              //For nested scrolling
+              onTouchStart={(e) => { this.setState({ screenScrollEnabled: false }); }}
               onMomentumScrollEnd={(e) => { this.setState({ screenScrollEnabled: true }); }}
               onScrollEndDrag={(e) => { this.setState({ screenScrollEnabled: true }); }}>
               {this.state.numGroups > 0 && (
@@ -275,23 +276,23 @@ export default class HomeScreen extends Component {
                       <TouchableOpacity
                         style={cardStyle}
                         delayPressIn={50}
-                        onPress={() => navigate('GroupScreens', { groupUid: groupData.groupUid, groupName: groupData.groupName, userUid: this.state.uid })}>
+                        onPress={async () => navigate('GroupScreens', { groupUid: groupData.groupUid, groupName: groupData.groupName, userUid: this.state.uid, membersData: await miscellaneous.getMembersData(groupData.groupUid) })}>
                         <Image
-                          style={styles.groupImage}
+                          style={styles.cardImage}
                           source={
                             groupData.imageUrl == '' ? require('../assets/group-default.png') : { uri: groupData.imageUrl }
                           }
                         />
                         <View>
                           <Text style={styles.groupName}>{groupData.groupName}</Text>
-                          <Text style={styles.groupMembers}>{groupData.numMembers} {groupData.numMembers == 1 ? 'member' : 'members'}</Text>
+                          <Text style={styles.cardSubtitle}>{groupData.numMembers} {groupData.numMembers == 1 ? 'member' : 'members'}</Text>
                         </View>
                       </TouchableOpacity>
                     );
                   })}
                 </View>
               )}
-              {this.state.numGroups == 0 && (<View><Text style={styles.noGroups}>No groups to display.</Text></View>)}
+              {this.state.numGroups == 0 && (<View><Text style={styles.noCards}>No groups to display.</Text></View>)}
             </ScrollView>
             <TouchableOpacity delayPressIn={50}>
               <Text onPress={() => navigate('CreateGroupScreen', { userUid: this.state.uid })}
@@ -300,77 +301,78 @@ export default class HomeScreen extends Component {
               </Text>
             </TouchableOpacity>
             <Text style={styles.title}>Group invitations {(this.state.numInvitations > 0) && <Text>({this.state.numInvitations})</Text>}</Text>
-            <ScrollView style={styles.sectionCards}
-              onTouchStart={(ev) => {
-                this.setState({ screenScrollEnabled: false });
-              }}
+            <ScrollView
+              style={styles.sectionCards}
+
+              //For nested scrolling
+              onTouchStart={(e) => { this.setState({ screenScrollEnabled: false }); }}
               onMomentumScrollEnd={(e) => { this.setState({ screenScrollEnabled: true }); }}
               onScrollEndDrag={(e) => { this.setState({ screenScrollEnabled: true }); }}>
-              <View style={styles.inviteCard}>
-                <View style={styles.inviteHeader}>
+              <View style={styles.card}>
+                <View style={styles.cardHeader}>
                   <Image
-                    style={styles.groupImage}
+                    style={styles.cardImage}
                   />
                   <View>
-                    <Text style={styles.inviteMessage}>
+                    <Text style={styles.cardMessage}>
                       <Text style={{ fontWeight: 'bold' }}>Username</Text> has invited you to join <Text style={{ fontWeight: "bold" }}>Group Name</Text>
                     </Text>
                   </View>
                 </View>
-                <View style={styles.inviteFooter}>
-                  <Text style={styles.groupMembers}>24 members</Text>
-                  <View style={styles.inviteButtons}>
+                <View style={styles.cardFooter}>
+                  <Text style={styles.cardSubtitle}>24 members</Text>
+                  <View style={styles.cardButtons}>
                     <TouchableOpacity delayPressIn={50}>
-                      <Text style={styles.inviteButton}>Accept</Text>
+                      <Text style={styles.cardButton}>Accept</Text>
                     </TouchableOpacity>
                     <TouchableOpacity delayPressIn={50}>
-                      <Text style={styles.inviteButton}>Ignore</Text>
+                      <Text style={styles.cardButton}>Ignore</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
               </View>
-              <View style={styles.inviteCard}>
-                <View style={styles.inviteHeader}>
+              <View style={styles.card}>
+                <View style={styles.cardHeader}>
                   <Image
-                    style={styles.groupImage}
+                    style={styles.cardImage}
                   />
                   <View>
-                    <Text style={styles.inviteMessage}>
+                    <Text style={styles.cardMessage}>
                       <Text style={{ fontWeight: 'bold' }}>Username</Text> has invited you to join <Text style={{ fontWeight: "bold" }}>Group Name</Text>
                     </Text>
                   </View>
                 </View>
-                <View style={styles.inviteFooter}>
-                  <Text style={styles.groupMembers}>24 members</Text>
-                  <View style={styles.inviteButtons}>
+                <View style={styles.cardFooter}>
+                  <Text style={styles.cardSubtitle}>24 members</Text>
+                  <View style={styles.cardButtons}>
                     <TouchableOpacity delayPressIn={50}>
-                      <Text style={styles.inviteButton}>Accept</Text>
+                      <Text style={styles.cardButton}>Accept</Text>
                     </TouchableOpacity>
                     <TouchableOpacity delayPressIn={50}>
-                      <Text style={styles.inviteButton}>Ignore</Text>
+                      <Text style={styles.cardButton}>Ignore</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
               </View>
-              <View style={styles.lastInviteCard}>
-                <View style={styles.inviteHeader}>
+              <View style={styles.lastCard}>
+                <View style={styles.cardHeader}>
                   <Image
-                    style={styles.groupImage}
+                    style={styles.cardImage}
                   />
                   <View>
-                    <Text style={styles.inviteMessage}>
+                    <Text style={styles.cardMessage}>
                       <Text style={{ fontWeight: 'bold' }}>Username</Text> has invited you to join <Text style={{ fontWeight: "bold" }}>Group Name</Text>
                     </Text>
                   </View>
                 </View>
-                <View style={styles.inviteFooter}>
-                  <Text style={styles.groupMembers}>24 members</Text>
-                  <View style={styles.inviteButtons}>
+                <View style={styles.cardFooter}>
+                  <Text style={styles.cardSubtitle}>24 members</Text>
+                  <View style={styles.cardButtons}>
                     <TouchableOpacity delayPressIn={50}>
-                      <Text style={styles.inviteButton}>Accept</Text>
+                      <Text style={styles.cardButton}>Accept</Text>
                     </TouchableOpacity>
                     <TouchableOpacity delayPressIn={50}>
-                      <Text style={styles.inviteButton}>Ignore</Text>
+                      <Text style={styles.cardButton}>Ignore</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -445,7 +447,7 @@ export default class HomeScreen extends Component {
             </View>
             <View>
               {this.state.resendEmailCooldown != '0' &&
-                <Text style={styles.resendEmailCooldown}>Please wait {this.state.resendEmailCooldown} seconds before requesting the code to be resent again.</Text>
+                <Text style={styles.resendEmailCooldown}>Please wait {this.state.resendEmailCooldown} seconds before requesting for the code to be resent again.</Text>
               }
             </View>
           </View>
@@ -458,13 +460,13 @@ export default class HomeScreen extends Component {
 
 const styles = StyleSheet.create({
   scrollView: {
-    backgroundColor: '#273238',
+    backgroundColor: '#273238'
   },
   container: {
     flex: 1,
     backgroundColor: '#273238',
     alignItems: 'center',
-    marginBottom: 25,
+    marginBottom: 25
   },
   title: {
     marginTop: 25,
@@ -472,14 +474,14 @@ const styles = StyleSheet.create({
     color: '#dde1e0',
     textAlign: 'center',
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: 'bold'
   },
   subtitle: {
     width: WIDTH - (WIDTH / 7),
     marginTop: 25,
     marginBottom: 25,
     fontSize: 18,
-    color: '#b5cad5',
+    color: '#b5cad5'
   },
   infoMessage: {
     width: WIDTH - (WIDTH / 7),
@@ -520,6 +522,72 @@ const styles = StyleSheet.create({
     color: '#b5cad5',
     backgroundColor: '#496f82',
   },
+  card: {
+    flex: 1,
+    width: WIDTH / 1.25,
+    marginBottom: 25,
+    backgroundColor: '#3a4449',
+    borderRadius: 20,
+    borderColor: '#566f7c'
+  },
+  lastCard: {
+    flex: 1,
+    width: WIDTH / 1.25,
+    backgroundColor: '#3a4449',
+    borderRadius: 20,
+    borderColor: '#566f7c'
+  },
+  cardHeader: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  cardImage: {
+    width: WIDTH / 7,
+    height: WIDTH / 7,
+    backgroundColor: '#566f7c',
+    borderRadius: 20,
+    marginRight: 20,
+  },
+  cardMessage: {
+    width: (WIDTH / 1.25) - (WIDTH / 7) - 30,
+    fontSize: 18,
+    color: '#b5cad5',
+  },
+  cardFooter: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    margin: WIDTH / 40,
+    marginLeft: WIDTH / 30,
+    marginRight: WIDTH / 30,
+    alignItems: 'center'
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    color: '#b5cad5',
+  },
+  cardButtons: {
+    flexDirection: 'row',
+  },
+  cardButton: {
+    minWidth: WIDTH / 6,
+    marginLeft: WIDTH / 30,
+    padding: 4,
+    paddingLeft: 8,
+    paddingRight: 8,
+    borderRadius: 10,
+    textAlign: 'center',
+    fontSize: 15,
+    color: '#b5cad5',
+    backgroundColor: '#496f82',
+  },
+  noCards: {
+    width: WIDTH - (WIDTH / 7),
+    textAlign: 'center',
+    fontSize: 18,
+    color: '#b5cad5',
+  },
   groupCard: {
     flex: 1,
     flexDirection: 'row',
@@ -539,75 +607,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderColor: '#566f7c'
   },
-  groupImage: {
-    width: WIDTH / 7,
-    height: WIDTH / 7,
-    backgroundColor: '#566f7c',
-    borderRadius: 20,
-    marginRight: 20,
-  },
   groupName: {
     fontSize: 22,
     color: '#b5cad5',
-  },
-  groupMembers: {
-    fontSize: 14,
-    color: '#b5cad5',
-  },
-  noGroups: {
-    width: WIDTH - (WIDTH / 7),
-    textAlign: 'center',
-    fontSize: 18,
-    color: '#b5cad5',
-  },
-  inviteCard: {
-    flex: 1,
-    width: WIDTH / 1.25,
-    marginBottom: 25,
-    backgroundColor: '#3a4449',
-    borderRadius: 20,
-    borderColor: '#566f7c'
-  },
-  lastInviteCard: {
-    flex: 1,
-    width: WIDTH / 1.25,
-    backgroundColor: '#3a4449',
-    borderRadius: 20,
-    borderColor: '#566f7c'
-  },
-  inviteHeader: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  inviteMessage: {
-    width: (WIDTH / 1.25) - (WIDTH / 7) - 30,
-    fontSize: 18,
-    color: '#b5cad5',
-  },
-  inviteFooter: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    margin: WIDTH / 40,
-    marginLeft: WIDTH / 30,
-    marginRight: WIDTH / 30,
-    alignItems: 'center'
-  },
-  inviteButtons: {
-    flexDirection: 'row',
-  },
-  inviteButton: {
-    minWidth: WIDTH / 6,
-    marginLeft: WIDTH / 30,
-    padding: 4,
-    paddingLeft: 8,
-    paddingRight: 8,
-    borderRadius: 10,
-    textAlign: 'center',
-    fontSize: 15,
-    color: '#b5cad5',
-    backgroundColor: '#496f82',
   },
   modal: {
     flex: 1,

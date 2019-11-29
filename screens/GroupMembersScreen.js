@@ -38,6 +38,8 @@ export default class GroupMembersScreen extends Component {
     super(props);
 
     this.state = {
+      groupUid: this.props.navigation.getParam('groupUid'),
+
       numMembers: 0,
       membersData: null,
     }
@@ -51,7 +53,7 @@ export default class GroupMembersScreen extends Component {
 
   async getMembersData() {
     //Getting the uids and types of all members, and number of members
-    const members = await miscellaneous.getMembers(this.props.navigation.getParam('groupUid'));
+    const members = await miscellaneous.getMembers(this.state.groupUid);
     const numMembers = members.length;
 
     const membersData = {};
@@ -60,16 +62,17 @@ export default class GroupMembersScreen extends Component {
       const member = members[key];
 
       //Getting member data
-      firebase.database().ref(`users/${member.uid}`).on('value', snap => {
-        membersData[member.uid] = {
-          'uid': member.uid,
-          'username': snap.child('username').val(),
-          'imageUrl': snap.child('imageUrl').val(),
-          'type': member.type,
-        };
+      firebase.database().ref(`users/${member.uid}`)
+        .on('value', snap => {
+          membersData[member.uid] = {
+            'uid': member.uid,
+            'username': snap.child('username').val(),
+            'imageUrl': snap.child('imageUrl').val(),
+            'type': member.type,
+          };
 
-        this.setState({ numMembers, membersData });
-      });
+          this.setState({ numMembers, membersData });
+        });
     });
   }
 
@@ -80,9 +83,9 @@ export default class GroupMembersScreen extends Component {
           <Text style={styles.title}>Group members {(this.state.numMembers > 0) && <Text>({this.state.numMembers})</Text>}</Text>
           <ScrollView
               /*style={styles.sectionCards}
-              onTouchStart={(ev) => {
-                this.setState({ screenScrollEnabled: false });
-              }}
+
+              //For nested scrolling
+              onTouchStart={(e) => { this.setState({ screenScrollEnabled: false })}}
               onMomentumScrollEnd={(e) => { this.setState({ screenScrollEnabled: true }); }}
               onScrollEndDrag={(e) => { this.setState({ screenScrollEnabled: true }); }}*/>
             {this.state.numMembers > 0 && (

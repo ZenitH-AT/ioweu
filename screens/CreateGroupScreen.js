@@ -110,7 +110,7 @@ export default class CreateGroupScreen extends Component {
         await miscellaneous.setInvite(inviteCode, groupUid);
 
         //Initial invite code is passed as a prop
-        return navigate('GroupScreens', { groupUid: groupUid, groupName: this.state.groupName, userUid: this.props.navigation.getParam('userUid'), inviteCode: inviteCode });
+        return navigate('GroupScreens', { groupUid, groupName: this.state.groupName, userUid: this.props.navigation.getParam('userUid'), membersData: await miscellaneous.getMembersData(groupUid), inviteCode: inviteCode });
       } catch (e) {
         this.setState({
           errorMessage: e.message,
