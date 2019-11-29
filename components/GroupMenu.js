@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     marginRight: WIDTH / 15,
   },
   modalButton: {
-    minWidth: WIDTH / 6,
+    minWidth: WIDTH / 5.5,
     padding: 4,
     paddingLeft: 8,
     paddingRight: 8,
