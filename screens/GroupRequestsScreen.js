@@ -171,12 +171,12 @@ export default class GroupRequestsScreen extends Component {
                         />
                         <View>
                           <Text style={styles.cardMessage}>
-                            <Text style={{ fontWeight: 'bold' }}>{this.state.membersData[requestData.requester].username ? this.state.membersData[requestData.requester].username : 'user_left'}{' '}</Text>
+                            <Text style={{ fontWeight: 'bold' }}>{this.state.membersData[requestData.requester] ? this.state.membersData[requestData.requester].username : 'user_left'}{' '}</Text>
                             requests{' '}
                             <Text style={{ fontWeight: "bold" }}>R{requestData.amount}</Text>{' '}
                             {requestData.requestee && (
                               <Text>from{' '}
-                                <Text style={{ fontWeight: "bold" }}>{this.state.membersData[requestData.requestee].username ? this.state.membersData[requestData.requestee].username : 'user_left'}{' '}</Text>
+                                <Text style={{ fontWeight: "bold" }}>{this.state.membersData[requestData.requestee] ? this.state.membersData[requestData.requestee].username : 'user_left'}{' '}</Text>
                               </Text>
                             )}
                             by{' '}
@@ -325,12 +325,12 @@ export default class GroupRequestsScreen extends Component {
                         />
                         <View>
                           <Text style={styles.cardMessage}>
-                            <Text style={{ fontWeight: 'bold' }}>{this.state.membersData[requestData.requester].username ? this.state.membersData[requestData.requester].username : 'user_left'}{' '}</Text>
+                            <Text style={{ fontWeight: 'bold' }}>{this.state.membersData[requestData.requester] ? this.state.membersData[requestData.requester].username : 'user_left'}{' '}</Text>
                             requested{' '}
                             <Text style={{ fontWeight: "bold" }}>R{requestData.amount}</Text>{' '}
                             {requestData.requestee && (
                               <Text>from{' '}
-                                <Text style={{ fontWeight: "bold" }}>{this.state.membersData[requestData.requestee].username ? this.state.membersData[requestData.requestee].username : 'user_left'}{' '}</Text>
+                                <Text style={{ fontWeight: "bold" }}>{this.state.membersData[requestData.requestee] ? this.state.membersData[requestData.requestee].username : 'user_left'}{' '}</Text>
                               </Text>
                             )}
                             by{' '}
