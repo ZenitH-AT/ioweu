@@ -92,11 +92,12 @@ export default class GroupRequestsScreen extends Component {
     }
   }
 
-  handleDeleteRequest() {
+  async handleDeleteRequest() {
     firebase.database().ref(`groups/${this.state.groupUid}/requests/${this.state.requestToDelete}`).remove();
 
-    this.setState({ deleteModalVisible: false });
-    //Recalculate data/reload tab
+    this.setState({ requestsData: null, deleteModalVisible: false });
+
+    return await this.getRequestsData();
   }
 
   async handleRequestMoney(/*something here*/) {
@@ -123,14 +124,15 @@ export default class GroupRequestsScreen extends Component {
       requester: this.state.userUid
     });
 
-    //Refresh screen here
-
-    return this.setState({
+    this.setState({
+      requestsData: null,
       modalErrorMessage,
       modalButtonsDisabled: false,
       modalHideDisabled: false,
       requestModalVisible: modalErrorMessage.length > 0 ? true : false
     });
+
+    return await this.getRequestsData();
   }
 
   render() {
@@ -185,7 +187,7 @@ export default class GroupRequestsScreen extends Component {
                       <View style={styles.cardFooter}>
                         <Text style={styles.cardSubtitle}>Requested:{'\n'}{requestData.requestTime}</Text>
                         <View style={styles.cardButtons}>
-                          {(requestData.requestee == this.state.userUid || requestData.requestee == '') && (
+                          {(requestData.requester != this.state.userUid && (requestData.requestee == this.state.userUid || !requestData.requestee)) && (
                             <TouchableOpacity
                               delayPressIn={50}
                               onPress={() => alert('TODO')}>
@@ -193,7 +195,7 @@ export default class GroupRequestsScreen extends Component {
                             </TouchableOpacity>
                           )}
                           {/*The requesting user or an admin can delete the request*/}
-                          {(requestData.requester == this.state.userUid || membersData[this.state.userUid].type == 1) && (
+                          {(requestData.requester == this.state.userUid || this.state.membersData[this.state.userUid].type == 1) && (
                             <TouchableOpacity
                               delayPressIn={50}
                               onPress={() => this.setState({ requestToDelete: requestData.requestUid, deleteModalVisible: true })}>
