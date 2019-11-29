@@ -19,10 +19,8 @@ export default class GroupMessagesScreen extends Component {
 
     this.state = {
       userUid: this.props.navigation.getParam('userUid'),
-      username: this.props.navigation.getParam('membersData')[this.props.navigation.getParam('userUid')].username,
-      imageUrl: this.props.navigation.getParam('membersData')[this.props.navigation.getParam('userUid')].imageUrl == '' ?
-        null : this.props.navigation.getParam('membersData')[this.props.navigation.getParam('userUid')].imageUrl,
       groupUid: this.props.navigation.getParam('groupUid'),
+      membersData: this.props.navigation.getParam('membersData'),
 
       //For initial invite code (after group creation)
       expiryCountdown: null,
@@ -76,7 +74,7 @@ export default class GroupMessagesScreen extends Component {
             <View style={styles.container}>
               <View>
                 <View style={styles.welcomeContainer}>
-                  <Text style={styles.welcomeMessage}>Welcome to your new group, {this.state.username}.{'\n'}The group invite code is:</Text>
+                  <Text style={styles.welcomeMessage}>Welcome to your new group, {this.state.membersData[this.state.userUid].username}.{'\n'}The group invite code is:</Text>
                   {this.state.expiryCountdown > 0 &&
                     <View>
                       <View style={styles.codeContainer}>
@@ -109,7 +107,11 @@ export default class GroupMessagesScreen extends Component {
           renderSend={(sendProps) => (<Send {...sendProps}><TouchableOpacity style={{ height: 44, justifyContent: 'center', marginRight: 10 }}><Text style={styles.sendButton}>Send</Text></TouchableOpacity></Send>)}
           messages={this.state.messages}
           onSend={(messages) => communication.sendMessages(this.state.groupUid, messages)}
-          user={{ _id: this.state.userUid, name: this.state.username, avatar: this.state.imageUrl }}
+          user={{
+            _id: this.state.userUid,
+            name: this.state.membersData[this.state.userUid].username,
+            avatar: this.state.membersData[this.state.userUid].imageUrl
+          }}
         />
       </SafeAreaView >
     );
