@@ -174,9 +174,9 @@ export default class GroupRequestsScreen extends Component {
                             <Text style={{ fontWeight: "bold" }}>R{requestData.amount}</Text>{' '}
                             {requestData.requestee && (
                               <Text>from{' '}
-                                <Text style={{ fontWeight: "bold" }}>{this.state.membersData[requestData.requestee].username}</Text>
+                                <Text style={{ fontWeight: "bold" }}>{this.state.membersData[requestData.requestee].username}{' '}</Text>
                               </Text>
-                            )}{' '}
+                            )}
                             by{' '}
                             <Text style={{ fontWeight: "bold" }}>{requestData.dueTime}</Text>
                           </Text>
@@ -328,9 +328,9 @@ export default class GroupRequestsScreen extends Component {
                             <Text style={{ fontWeight: "bold" }}>R{requestData.amount}</Text>{' '}
                             {requestData.requestee && (
                               <Text>from{' '}
-                                <Text style={{ fontWeight: "bold" }}>{this.state.membersData[requestData.requestee].username}</Text>
+                                <Text style={{ fontWeight: "bold" }}>{this.state.membersData[requestData.requestee].username}{' '}</Text>
                               </Text>
-                            )}{' '}
+                            )}
                             by{' '}
                             <Text style={{ fontWeight: "bold" }}>{requestData.dueTime}</Text>
                           </Text>
