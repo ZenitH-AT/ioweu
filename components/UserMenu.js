@@ -23,7 +23,7 @@ export default class UserMenu extends Component {
     firebase.database().ref(`users/${this.state.uid}`)
       .on('value', snap => this.setState({
         username: snap.child('username').val(),
-        imageUrl: snap.child('imageUrl').val() == '' ? this.state.imageUrl : { uri: snap.child('imageUrl').val() },
+        imageUrl: snap.child('imageUrl').val() == '' ? this.state.imageUrl : { uri: snap.child('imageUrl').val() }
       }));
   }
 
