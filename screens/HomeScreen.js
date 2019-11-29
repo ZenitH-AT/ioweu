@@ -56,10 +56,10 @@ export default class HomeScreen extends Component {
 
       //For joining a group using an invite code
       modalVisible: false,
-      joinInviteCode: '',
       modalErrorMessage: '',
-      modalJoinButtonDisabled: false,
+      modalButtonsDisabled: false,
       modalHideDisabled: false,
+      joinInviteCode: '',
 
       //For account activation
       activationCode: null,
@@ -69,7 +69,7 @@ export default class HomeScreen extends Component {
       resendEmailCooldown: null,
 
       //For nested ScrollView functionality
-      screenScrollEnabled: true,
+      screenScrollEnabled: true
     }
   }
 
@@ -147,11 +147,11 @@ export default class HomeScreen extends Component {
     const { navigate } = this.props.navigation;
 
     this.setState({
-      modalJoinButtonDisabled: true,
+      modalButtonsDisabled: true,
       modalHideDisabled: true
     });
 
-    let modalErrorMessage;
+    let modalErrorMessage = '';
 
     if (!validation.emptyOrWhitespace(inviteCode)) {
       const inviteExists = await validation.keyExists('invites', inviteCode);
@@ -183,7 +183,7 @@ export default class HomeScreen extends Component {
 
     return this.setState({
       modalErrorMessage,
-      modalJoinButtonDisabled: false,
+      modalButtonsDisabled: false,
       modalHideDisabled: false
     });
   }
@@ -279,9 +279,7 @@ export default class HomeScreen extends Component {
                         onPress={async () => navigate('GroupScreens', { groupUid: groupData.groupUid, groupName: groupData.groupName, userUid: this.state.uid, membersData: await miscellaneous.getMembersData(groupData.groupUid) })}>
                         <Image
                           style={styles.cardImage}
-                          source={
-                            groupData.imageUrl == '' ? require('../assets/group-default.png') : { uri: groupData.imageUrl }
-                          }
+                          source={groupData.imageUrl == '' ? require('../assets/group-default.png') : { uri: groupData.imageUrl }}
                         />
                         <View>
                           <Text style={styles.groupName}>{groupData.groupName}</Text>
@@ -407,8 +405,8 @@ export default class HomeScreen extends Component {
                   value={this.state.joinInviteCode}
                 />
                 <View style={styles.modalButtons}>
-                  <RNTouchableOpacity onPress={() => this.handleJoinGroup(this.state.joinInviteCode)}><Text style={styles.modalButton}>Join</Text></RNTouchableOpacity>
-                  <RNTouchableOpacity onPress={() => this.hideModal()}><Text style={styles.modalButton}>Cancel</Text></RNTouchableOpacity>
+                  <RNTouchableOpacity disabled={this.state.modalButtonsDisabled} onPress={() => this.handleJoinGroup(this.state.joinInviteCode)}><Text style={styles.modalButton}>Join</Text></RNTouchableOpacity>
+                  <RNTouchableOpacity disabled={this.state.modalButtonsDisabled} onPress={() => this.hideModal()}><Text style={styles.modalButton}>Cancel</Text></RNTouchableOpacity>
                 </View>
               </View>
             </Modal>
@@ -656,7 +654,7 @@ const styles = StyleSheet.create({
     marginRight: WIDTH / 15,
   },
   modalButton: {
-    minWidth: WIDTH / 6,
+    minWidth: WIDTH / 5.5,
     padding: 4,
     paddingLeft: 8,
     paddingRight: 8,

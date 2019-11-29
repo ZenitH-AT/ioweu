@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
-import { StyleSheet, ScrollView, View, Text, Image, Dimensions } from 'react-native';
+import { StyleSheet, ScrollView, View, Text, Image, Picker, TouchableOpacity as RNTouchableOpacity, Dimensions } from 'react-native';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import FontAwesome, { parseIconFromClassName } from 'react-native-fontawesome';
+import Modal from 'react-native-modal';
 import SplashScreen from 'react-native-splash-screen';
 
 import * as firebase from 'firebase';
-
 import generation from '../utils/generation';
 
 const { width: WIDTH, height: HEIGHT } = Dimensions.get('window');
@@ -19,9 +19,22 @@ export default class GroupRequestsScreen extends Component {
       groupUid: this.props.navigation.getParam('groupUid'),
       membersData: this.props.navigation.getParam('membersData'),
 
+      //Requests data
       numActiveRequests: 0,
       numGrantedRequests: 0,
-      requestsData: null
+      requestsData: null,
+
+      //For making a request
+      modalVisible: false,
+      modalErrorMessage: '',
+      modalButtonsDisabled: false,
+      modalHideDisabled: false,
+      requestedAmount: null,
+      requestedRequestee: null,
+      requestedDueTime: null,
+
+      //For nested ScrollView functionality
+      screenScrollEnabled: true
     }
   }
 
@@ -29,10 +42,28 @@ export default class GroupRequestsScreen extends Component {
     SplashScreen.hide();
 
     await this.getRequestsData();
+
+    console.log(this.state.membersData);
+
+    Object.keys(this.state.membersData).filter((key, i) => {
+      
+    });
+
+    // const filteredRequestees = Object.keys(this.state.membersData).filter((key, i) =>
+    //   key.uid != this.state.userUid
+    // );
+
+    //alert(JSON.stringify(filteredRequestees));
+
+    // Object.keys(filteredRequestees).map((key, i) => {
+    //   const memberData = filteredRequestees[key];
+
+    //   alert(memberData.uid);
+    // });
   }
 
-  getRequestsData() {
-    firebase.database().ref(`groups/${this.state.groupUid}/requests`)
+  async getRequestsData() {
+    await firebase.database().ref(`groups/${this.state.groupUid}/requests`)
       .once('value', snap => {
         let numActiveRequests = 0;
         let numGrantedRequests = 0;
@@ -44,7 +75,7 @@ export default class GroupRequestsScreen extends Component {
 
           requestsData[active][data.key] = {
             'requestUid': data.key,
-            'amount': data.child('amount').val(),
+            'amount': parseFloat(data.child('amount').val()).toFixed(2),
             'dueTime': generation.secondsToDateTime(data.child('dueTime').val()),
             'grantTime': generation.secondsToDateTime(data.child('grantTime').val()),
             'requestTime': generation.secondsToDateTime(data.child('requestTime').val()),
@@ -57,9 +88,40 @@ export default class GroupRequestsScreen extends Component {
       });
   }
 
+  hideModal() {
+    if (!this.state.hideModalDisabled) {
+      this.setState({ modalVisible: false, modalErrorMessage: '' });
+    }
+  }
+
+  async handleRequestMoney(/*something here*/) {
+    this.setState({
+      modalButtonsDisabled: true,
+      modalHideDisabled: true
+    });
+
+    let modalErrorMessage = '';
+
+    //TODO
+    alert('hello!');
+    //refresh screen
+
+    return this.setState({
+      modalErrorMessage,
+      modalButtonsDisabled: false,
+      modalHideDisabled: false
+    });
+  }
+
   render() {
+    //Excludes the signed in user from the list of member options
+    const filteredRequestees = this.state.membersData;
+    // const filteredRequestees = Object.keys(this.state.membersData).filter((key, i) =>
+    //   this.state.membersData[key].uid != this.state.userUid
+    // );
+
     return (
-      <ScrollView style={styles.scrollView} >
+      <ScrollView style={styles.scrollView} scrollEnabled={this.state.screenScrollEnabled}>
         <View style={styles.container}>
           <Text style={styles.title}>Active requests {(this.state.numActiveRequests > 0) && <Text>({this.state.numActiveRequests})</Text>}</Text>
           <ScrollView
@@ -75,7 +137,7 @@ export default class GroupRequestsScreen extends Component {
                   const requestData = this.state.requestsData[true][key];
                   let cardStyle = styles.card;
 
-                  if (i === Object.keys(this.state.requestsData[true].length - 1)) {
+                  if (i === Object.keys(this.state.requestsData[true]).length - 1) {
                     cardStyle = styles.lastCard; //Last card has no bottom border
                   }
 
@@ -85,53 +147,128 @@ export default class GroupRequestsScreen extends Component {
                       <View style={styles.cardHeader}>
                         <Image
                           style={styles.cardImage}
+                          source={this.state.membersData[requestData.requester].imageUrl == '' ? require('../assets/user-default.png') : { uri: this.state.membersData[requestData.requester].imageUrl }}
                         />
                         <View>
                           <Text style={styles.cardMessage}>
-                            <Text style={{ fontWeight: 'bold' }}>{requestData.requester}</Text> requests <Text style={{ fontWeight: "bold" }}>R{requestData.amount}</Text> from <Text style={{ fontWeight: "bold" }}>{requestData.requestee}</Text> by <Text style={{ fontWeight: "bold" }}>{requestData.dueTime}</Text>
+                            <Text style={{ fontWeight: 'bold' }}>{this.state.membersData[requestData.requester].username}</Text> requests <Text style={{ fontWeight: "bold" }}>R{requestData.amount}</Text> from <Text style={{ fontWeight: "bold" }}>{this.state.membersData[requestData.requestee].username}</Text> by <Text style={{ fontWeight: "bold" }}>{requestData.dueTime}</Text>
                           </Text>
                         </View>
                       </View>
                       <View style={styles.cardFooter}>
                         <Text style={styles.cardSubtitle}>Requested:{'\n'}{requestData.requestTime}</Text>
                         <View style={styles.cardButtons}>
-                          <TouchableOpacity delayPressIn={50}>
-                            <Text style={styles.cardButton}>Grant</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity delayPressIn={50}>
-                            <Text style={styles.cardButton}>Delete</Text>
-                          </TouchableOpacity>
+                          {(requestData.requestee == this.state.userUid || requestData.requestee == '') && (
+                            <TouchableOpacity
+                              delayPressIn={50}
+                              onPress={() => alert('hello')}>
+                              <Text style={styles.cardButton}>Grant</Text>
+                            </TouchableOpacity>
+                          )}
+                          {//The requesting user or an admin can delete the request
+                            (requestData.requester == this.state.userUid || membersData[this.state.userUid].type == 1) && (
+                              <TouchableOpacity
+                                delayPressIn={50}
+                                onPress={() => alert('hello')}>
+                                <Text style={styles.cardButton}>Delete</Text>
+                              </TouchableOpacity>
+                            )}
                         </View>
                       </View>
                     </View>
-                    // <TouchableOpacity
-                    //   style={cardStyle}
-                    //   delayPressIn={50}
-                    //   onPress={() => null}>
-                    //   <Image
-                    //     style={styles.groupImage}
-                    //     source={
-                    //       groupData.imageUrl == '' ? require('../assets/group-default.png') : { uri: groupData.imageUrl }
-                    //     }
-                    //   />
-                    //   <View>
-                    //     <Text style={styles.groupName}>{requestData.groupName}</Text>
-                    //     <Text style={styles.groupMembers}>{requestData.numMembers} {groupData.numMembers == 1 ? 'member' : 'members'}</Text>
-                    //   </View>
-                    // </TouchableOpacity>
                   );
                 })}
               </View>
             )}
             {this.state.numActiveRequests == 0 && (<View><Text style={styles.noCards}>No requests to display.</Text></View>)}
           </ScrollView>
-          <TouchableOpacity delayPressIn={50}>
-            <Text onPress={() => /*open modal*/ alert('hello')}
-              style={styles.sectionButton}>
-              <FontAwesome icon={parseIconFromClassName('fas fa-plus')} />  Request money
-              </Text>
+          <TouchableOpacity
+            delayPressIn={50}
+            onPress={() => { this.setState({ modalVisible: true }) }}>
+            <Text style={styles.sectionButton}><FontAwesome icon={parseIconFromClassName('fas fa-plus')} />  Request money</Text>
           </TouchableOpacity>
+          <Modal
+            isVisible={this.state.modalVisible}
+            onBackButtonPress={() => this.hideModal()}
+            onBackdropPress={() => this.hideModal()}
+            deviceWidth={WIDTH}
+            deviceHeight={HEIGHT}
+            backdropColor={'rgba(29, 36, 40, 0.5)'}
+            style={{ marginBottom: HEIGHT / 5 }}>
+            <View style={styles.modal}>
+              <Text style={styles.modalTitle}>Request money</Text>
+              <View>
+                {this.state.modalErrorMessage != '' && <Text style={styles.modalErrorMessage}>{this.state.modalErrorMessage}</Text>}
+              </View>
+              <TextInput
+                style={styles.modalInput}
+                placeholder={'Amount (R)'}
+                placeholderTextColor={'#b5cad5'}
+                underlineColorAndroid={'transparent'}
+                keyboardType={'numeric'}
+                onChangeText={requestedAmount => this.setState({ requestedAmount })}
+                value={this.state.requestedAmount}
+              />
+              <Text style={styles.modalLabel}>Member:</Text>
+              <Picker
+                style={styles.modalPicker}
+                prompt={'Request money from'}
+                selectedValue={this.state.requestedRequestee}
+                onValueChange={requestedRequestee => this.setState({ requestedRequestee })}>
+                <Picker.Item label={'All members'} value={''} />
+                {Object.keys(filteredRequestees).map((key, i) => {
+                  const memberData = filteredRequestees[key];
+                  return (<Picker.Item label={memberData.username} value={memberData.uid} />);
+                })}
+              </Picker>
+              <View style={styles.modalButtons}>
+                <RNTouchableOpacity disabled={this.state.modalButtonsDisabled} onPress={() => this.handleRequestMoney()}><Text style={styles.modalButton}>Request</Text></RNTouchableOpacity>
+                <RNTouchableOpacity disabled={this.state.modalButtonsDisabled} onPress={() => this.hideModal()}><Text style={styles.modalButton}>Cancel</Text></RNTouchableOpacity>
+              </View>
+            </View>
+          </Modal>
           <Text style={styles.title}>Granted requests {(this.state.numGrantedRequests > 0) && <Text>({this.state.numGrantedRequests})</Text>}</Text>
+          <ScrollView
+            style={styles.sectionCards}
+
+            //For nested scrolling
+            onTouchStart={(e) => { this.setState({ screenScrollEnabled: false }); }}
+            onMomentumScrollEnd={(e) => { this.setState({ screenScrollEnabled: true }); }}
+            onScrollEndDrag={(e) => { this.setState({ screenScrollEnabled: true }); }}>
+            {this.state.numActiveRequests > 0 && (
+              <View>
+                {Object.keys(this.state.requestsData[false]).map((key, i) => {
+                  const requestData = this.state.requestsData[false][key];
+                  let cardStyle = styles.card;
+
+                  if (i === Object.keys(this.state.requestsData[false]).length - 1) {
+                    cardStyle = styles.lastCard; //Last card has no bottom border
+                  }
+
+                  //Displaying request cards
+                  return (
+                    <View style={cardStyle}>
+                      <View style={styles.cardHeader}>
+                        <Image
+                          style={styles.cardImage}
+                          source={this.state.membersData[requestData.requester].imageUrl == '' ? require('../assets/user-default.png') : { uri: this.state.membersData[requestData.requester].imageUrl }}
+                        />
+                        <View>
+                          <Text style={styles.cardMessage}>
+                            <Text style={{ fontWeight: 'bold' }}>{this.state.membersData[requestData.requester].username}</Text> requests <Text style={{ fontWeight: "bold" }}>R{requestData.amount}</Text> from <Text style={{ fontWeight: "bold" }}>{this.state.membersData[requestData.requestee].username}</Text> by <Text style={{ fontWeight: "bold" }}>{requestData.dueTime}</Text>
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={styles.cardFooter}>
+                        <Text style={styles.cardSubtitle}>Granted: {requestData.grantTime}</Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+            {this.state.numActiveRequests == 0 && (<View><Text style={styles.noCards}>No requests to display.</Text></View>)}
+          </ScrollView>
         </View>
       </ScrollView>
     );
@@ -244,4 +381,71 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#b5cad5',
   },
+  modal: {
+    flex: 1,
+    position: 'absolute',
+    alignSelf: 'center',
+    width: WIDTH / 1.4,
+    padding: HEIGHT / 35,
+    paddingLeft: WIDTH / 15,
+    paddingRight: WIDTH / 15,
+    backgroundColor: '#485c67',
+    borderRadius: 20,
+  },
+  modalTitle: {
+    marginBottom: 15,
+    color: '#dde1e0',
+    textAlign: 'center',
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  modalErrorMessage: {
+    marginBottom: 15,
+    paddingBottom: 5,
+    paddingTop: 5,
+    borderRadius: 10,
+    backgroundColor: 'rgba(39, 50, 56, 0.8)',
+    color: '#db3b30',
+    fontSize: 15,
+    textAlign: 'center',
+  },
+  modalLabel: {
+    marginBottom: 5,
+    color: '#b5cad5',
+    fontSize: 15
+  },
+  modalInput: {
+    height: 45,
+    borderRadius: 25,
+    fontSize: 18,
+    paddingLeft: 25,
+    backgroundColor: '#354249',
+    marginBottom: 15,
+    color: '#dde1e0',
+  },
+  modalPicker: {
+    height: 45,
+    fontSize: 18,
+    backgroundColor: '#354249',
+    marginBottom: 15,
+    color: '#dde1e0',
+  },
+  modalButtons: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginLeft: WIDTH / 15,
+    marginRight: WIDTH / 15,
+  },
+  modalButton: {
+    minWidth: WIDTH / 5.5,
+    padding: 4,
+    paddingLeft: 8,
+    paddingRight: 8,
+    borderRadius: 10,
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#b5cad5',
+    backgroundColor: '#496f82',
+  }
 });
