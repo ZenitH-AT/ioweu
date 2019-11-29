@@ -100,6 +100,8 @@ export default class GroupRequestsScreen extends Component {
   }
 
   async handleRequestMoney(/*something here*/) {
+    const dbRef = firebase.database().ref(`groups/${this.state.groupUid}/requests`);
+
     this.setState({
       modalButtonsDisabled: true,
       modalHideDisabled: true
@@ -107,14 +109,27 @@ export default class GroupRequestsScreen extends Component {
 
     let modalErrorMessage = '';
 
-    //TODO
-    alert('hello!');
-    //refresh screen
+    //Validation here
+
+    const requestUid = dbRef.push().key;
+
+    dbRef.child(requestUid).set({
+      active: true,
+      amount: this.state.requestedAmount,
+      dueTime: new Date((this.state.requestedDueTime + ':00').replace(/-/g, '/')).getTime() / 1000,
+      grantTime: null,
+      requestTime: new Date().getTime() / 1000,
+      requestee: this.state.requestedRequestee,
+      requester: this.state.userUid
+    });
+
+    //Refresh screen here
 
     return this.setState({
       modalErrorMessage,
       modalButtonsDisabled: false,
-      modalHideDisabled: false
+      modalHideDisabled: false,
+      requestModalVisible: modalErrorMessage.length > 0 ? true : false
     });
   }
 
@@ -154,7 +169,16 @@ export default class GroupRequestsScreen extends Component {
                         />
                         <View>
                           <Text style={styles.cardMessage}>
-                            <Text style={{ fontWeight: 'bold' }}>{this.state.membersData[requestData.requester].username}</Text> requests <Text style={{ fontWeight: "bold" }}>R{requestData.amount}</Text> from <Text style={{ fontWeight: "bold" }}>{this.state.membersData[requestData.requestee].username}</Text> by <Text style={{ fontWeight: "bold" }}>{requestData.dueTime}</Text>
+                            <Text style={{ fontWeight: 'bold' }}>{this.state.membersData[requestData.requester].username}{' '}</Text>
+                            requests{' '}
+                            <Text style={{ fontWeight: "bold" }}>R{requestData.amount}</Text>{' '}
+                            {requestData.requestee && (
+                              <Text>from{' '}
+                                <Text style={{ fontWeight: "bold" }}>{this.state.membersData[requestData.requestee].username}</Text>
+                              </Text>
+                            )}{' '}
+                            by{' '}
+                            <Text style={{ fontWeight: "bold" }}>{requestData.dueTime}</Text>
                           </Text>
                         </View>
                       </View>
@@ -164,18 +188,18 @@ export default class GroupRequestsScreen extends Component {
                           {(requestData.requestee == this.state.userUid || requestData.requestee == '') && (
                             <TouchableOpacity
                               delayPressIn={50}
-                              onPress={() => alert('hello')}>
+                              onPress={() => alert('TODO')}>
                               <Text style={styles.cardButton}>Grant</Text>
                             </TouchableOpacity>
                           )}
-                          {//The requesting user or an admin can delete the request
-                            (requestData.requester == this.state.userUid || membersData[this.state.userUid].type == 1) && (
-                              <TouchableOpacity
-                                delayPressIn={50}
-                                onPress={() => this.setState({ requestToDelete: requestData.requestUid, deleteModalVisible: true })}>
-                                <Text style={styles.cardButton}>Delete</Text>
-                              </TouchableOpacity>
-                            )}
+                          {/*The requesting user or an admin can delete the request*/}
+                          {(requestData.requester == this.state.userUid || membersData[this.state.userUid].type == 1) && (
+                            <TouchableOpacity
+                              delayPressIn={50}
+                              onPress={() => this.setState({ requestToDelete: requestData.requestUid, deleteModalVisible: true })}>
+                              <Text style={styles.cardButton}>Delete</Text>
+                            </TouchableOpacity>
+                          )}
                         </View>
                       </View>
                     </View>
@@ -241,6 +265,30 @@ export default class GroupRequestsScreen extends Component {
                   return (<Picker.Item label={memberData.username} value={memberData.uid} />);
                 })}
               </Picker>
+              <Text style={styles.modalLabel}>Due date and time:</Text>
+              <DatePicker
+                style={styles.modalDatePicker}
+                date={this.state.requestedDueTime}
+                mode={'datetime'}
+                showIcon={false}
+                minDate={new Date()}
+                placeholder={'Select date'}
+                customStyles={{
+                  dateInput: {
+                    backgroundColor: '#354249',
+                    borderColor: 'transparent'
+                  },
+                  placeholderText: {
+                    fontSize: 18,
+                    color: '#dde1e0'
+                  },
+                  dateText: {
+                    fontSize: 18,
+                    color: '#dde1e0'
+                  }
+                }}
+                onDateChange={(requestedDueTime) => { this.setState({ requestedDueTime }) }}
+              />
               <View style={styles.modalButtons}>
                 <RNTouchableOpacity disabled={this.state.modalButtonsDisabled} onPress={() => this.handleRequestMoney()}><Text style={styles.modalButton}>Request</Text></RNTouchableOpacity>
                 <RNTouchableOpacity disabled={this.state.modalButtonsDisabled} onPress={() => this.hideModal()}><Text style={styles.modalButton}>Cancel</Text></RNTouchableOpacity>
@@ -275,7 +323,16 @@ export default class GroupRequestsScreen extends Component {
                         />
                         <View>
                           <Text style={styles.cardMessage}>
-                            <Text style={{ fontWeight: 'bold' }}>{this.state.membersData[requestData.requester].username}</Text> requests <Text style={{ fontWeight: "bold" }}>R{requestData.amount}</Text> from <Text style={{ fontWeight: "bold" }}>{this.state.membersData[requestData.requestee].username}</Text> by <Text style={{ fontWeight: "bold" }}>{requestData.dueTime}</Text>
+                            <Text style={{ fontWeight: 'bold' }}>{this.state.membersData[requestData.requester].username}{' '}</Text>
+                            requested{' '}
+                            <Text style={{ fontWeight: "bold" }}>R{requestData.amount}</Text>{' '}
+                            {requestData.requestee && (
+                              <Text>from{' '}
+                                <Text style={{ fontWeight: "bold" }}>{this.state.membersData[requestData.requestee].username}</Text>
+                              </Text>
+                            )}{' '}
+                            by{' '}
+                            <Text style={{ fontWeight: "bold" }}>{requestData.dueTime}</Text>
                           </Text>
                         </View>
                       </View>
@@ -290,7 +347,7 @@ export default class GroupRequestsScreen extends Component {
             {this.state.numGrantedRequests == 0 && (<View><Text style={styles.noCards}>No requests to display.</Text></View>)}
           </ScrollView>
         </View>
-      </ScrollView>
+      </ScrollView >
     );
   }
 }
@@ -459,6 +516,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#354249',
     marginBottom: 15,
     color: '#dde1e0',
+  },
+  modalDatePicker: {
+    width: 'auto',
+    height: 45,
+    marginBottom: 15
   },
   modalButtons: {
     flex: 1,

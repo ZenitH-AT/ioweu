@@ -75,7 +75,7 @@ export default class CreateGroupScreen extends Component {
     } else {
       try {
         //Creating group
-        const groupUid = firebase.database().ref('groups').push().key; //Group UID
+        const groupUid = firebase.database().ref('groups').push().key;
 
         let imageUrl = '';
 
