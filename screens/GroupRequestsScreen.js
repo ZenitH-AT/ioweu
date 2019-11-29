@@ -3,6 +3,7 @@ import { StyleSheet, ScrollView, View, Text, Image, Picker, TouchableOpacity as 
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import FontAwesome, { parseIconFromClassName } from 'react-native-fontawesome';
 import Modal from 'react-native-modal';
+import DatePicker from 'react-native-datepicker';
 import SplashScreen from 'react-native-splash-screen';
 
 import * as firebase from 'firebase';
@@ -24,8 +25,12 @@ export default class GroupRequestsScreen extends Component {
       numGrantedRequests: 0,
       requestsData: null,
 
-      //For making a request
-      modalVisible: false,
+      //For managing requests
+      loading: true,
+      requestToDelete: '',
+      deleteModalVisible: false,
+      requestModalVisible: false,
+      filteredRequestees: {},
       modalErrorMessage: '',
       modalButtonsDisabled: false,
       modalHideDisabled: false,
@@ -43,23 +48,16 @@ export default class GroupRequestsScreen extends Component {
 
     await this.getRequestsData();
 
-    console.log(this.state.membersData);
+    const filteredRequestees = {};
 
-    Object.keys(this.state.membersData).filter((key, i) => {
-      
+    //Excludes the signed in user from the list of member options
+    Object.keys(this.state.membersData).forEach(key => {
+      if (key !== this.state.userUid) {
+        filteredRequestees[key] = this.state.membersData[key];
+      }
     });
 
-    // const filteredRequestees = Object.keys(this.state.membersData).filter((key, i) =>
-    //   key.uid != this.state.userUid
-    // );
-
-    //alert(JSON.stringify(filteredRequestees));
-
-    // Object.keys(filteredRequestees).map((key, i) => {
-    //   const memberData = filteredRequestees[key];
-
-    //   alert(memberData.uid);
-    // });
+    this.setState({ filteredRequestees, loading: false });
   }
 
   async getRequestsData() {
@@ -90,8 +88,15 @@ export default class GroupRequestsScreen extends Component {
 
   hideModal() {
     if (!this.state.hideModalDisabled) {
-      this.setState({ modalVisible: false, modalErrorMessage: '' });
+      this.setState({ requestModalVisible: false, modalErrorMessage: '' });
     }
+  }
+
+  handleDeleteRequest() {
+    firebase.database().ref(`groups/${this.state.groupUid}/requests/${this.state.requestToDelete}`).remove();
+
+    this.setState({ deleteModalVisible: false });
+    //Recalculate data/reload tab
   }
 
   async handleRequestMoney(/*something here*/) {
@@ -114,11 +119,9 @@ export default class GroupRequestsScreen extends Component {
   }
 
   render() {
-    //Excludes the signed in user from the list of member options
-    const filteredRequestees = this.state.membersData;
-    // const filteredRequestees = Object.keys(this.state.membersData).filter((key, i) =>
-    //   this.state.membersData[key].uid != this.state.userUid
-    // );
+    if (this.state.loading) {
+      return <ScrollView style={styles.scrollView}></ScrollView>;
+    }
 
     return (
       <ScrollView style={styles.scrollView} scrollEnabled={this.state.screenScrollEnabled}>
@@ -169,7 +172,7 @@ export default class GroupRequestsScreen extends Component {
                             (requestData.requester == this.state.userUid || membersData[this.state.userUid].type == 1) && (
                               <TouchableOpacity
                                 delayPressIn={50}
-                                onPress={() => alert('hello')}>
+                                onPress={() => this.setState({ requestToDelete: requestData.requestUid, deleteModalVisible: true })}>
                                 <Text style={styles.cardButton}>Delete</Text>
                               </TouchableOpacity>
                             )}
@@ -184,11 +187,28 @@ export default class GroupRequestsScreen extends Component {
           </ScrollView>
           <TouchableOpacity
             delayPressIn={50}
-            onPress={() => { this.setState({ modalVisible: true }) }}>
+            onPress={() => { this.setState({ requestModalVisible: true }) }}>
             <Text style={styles.sectionButton}><FontAwesome icon={parseIconFromClassName('fas fa-plus')} />  Request money</Text>
           </TouchableOpacity>
           <Modal
-            isVisible={this.state.modalVisible}
+            isVisible={this.state.deleteModalVisible}
+            onBackButtonPress={() => this.setState({ deleteModalVisible: false })}
+            onBackdropPress={() => this.setState({ deleteModalVisible: false })}
+            deviceWidth={WIDTH}
+            deviceHeight={HEIGHT}
+            backdropColor={'rgba(29, 36, 40, 0.5)'}
+            style={{ marginBottom: HEIGHT / 5 }}>
+            <View style={styles.modal}>
+              <Text style={styles.modalTitle}>Delete request</Text>
+              <Text style={styles.modalSubtitle}>Are you sure you want to delete this request?</Text>
+              <View style={styles.modalButtons}>
+                <RNTouchableOpacity onPress={() => this.handleDeleteRequest()}><Text style={styles.modalButton}>Delete</Text></RNTouchableOpacity>
+                <RNTouchableOpacity onPress={() => this.setState({ deleteModalVisible: false })}><Text style={styles.modalButton}>Cancel</Text></RNTouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+          <Modal
+            isVisible={this.state.requestModalVisible}
             onBackButtonPress={() => this.hideModal()}
             onBackdropPress={() => this.hideModal()}
             deviceWidth={WIDTH}
@@ -216,8 +236,8 @@ export default class GroupRequestsScreen extends Component {
                 selectedValue={this.state.requestedRequestee}
                 onValueChange={requestedRequestee => this.setState({ requestedRequestee })}>
                 <Picker.Item label={'All members'} value={''} />
-                {Object.keys(filteredRequestees).map((key, i) => {
-                  const memberData = filteredRequestees[key];
+                {Object.keys(this.state.filteredRequestees).map((key, i) => {
+                  const memberData = this.state.filteredRequestees[key];
                   return (<Picker.Item label={memberData.username} value={memberData.uid} />);
                 })}
               </Picker>
@@ -235,7 +255,7 @@ export default class GroupRequestsScreen extends Component {
             onTouchStart={(e) => { this.setState({ screenScrollEnabled: false }); }}
             onMomentumScrollEnd={(e) => { this.setState({ screenScrollEnabled: true }); }}
             onScrollEndDrag={(e) => { this.setState({ screenScrollEnabled: true }); }}>
-            {this.state.numActiveRequests > 0 && (
+            {this.state.numGrantedRequests > 0 && (
               <View>
                 {Object.keys(this.state.requestsData[false]).map((key, i) => {
                   const requestData = this.state.requestsData[false][key];
@@ -267,7 +287,7 @@ export default class GroupRequestsScreen extends Component {
                 })}
               </View>
             )}
-            {this.state.numActiveRequests == 0 && (<View><Text style={styles.noCards}>No requests to display.</Text></View>)}
+            {this.state.numGrantedRequests == 0 && (<View><Text style={styles.noCards}>No requests to display.</Text></View>)}
           </ScrollView>
         </View>
       </ScrollView>
@@ -398,6 +418,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 22,
     fontWeight: 'bold',
+  },
+  modalSubtitle: {
+    marginBottom: 15,
+    paddingBottom: 5,
+    paddingTop: 5,
+    borderRadius: 10,
+    backgroundColor: 'rgba(39, 50, 56, 0.8)',
+    color: '#b5cad5',
+    fontSize: 15,
+    textAlign: 'center',
   },
   modalErrorMessage: {
     marginBottom: 15,
