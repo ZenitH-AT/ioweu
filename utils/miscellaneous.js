@@ -86,6 +86,34 @@ const miscellaneous = {
         });
     },
 
+    getMemberData: async (member) => {
+        var memberData;
+
+        return await firebase.database().ref(`users/${member.uid}`).once('value', snap => {
+            memberData = {
+                'uid': member.uid,
+                'username': snap.child('username').val(),
+                'imageUrl': snap.child('imageUrl').val(),
+                'type': member.type,
+            };
+        }).then(() => {
+            return memberData;
+        });
+    },
+
+    getMembersData: async (groupUid) => {
+        const members = await miscellaneous.getMembers(groupUid);
+        var membersData = {};
+
+        await Promise.all(Object.keys(members).map(async (key, i) => {
+            const member = members[key]
+
+            membersData[member.uid] = await miscellaneous.getMemberData(member);
+        }));
+
+        return membersData;
+    },
+
     removeGroup: async (groupUid) => {
         const db = firebase.database();
 

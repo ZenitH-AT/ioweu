@@ -12,16 +12,31 @@ const generation = {
         return result;
     },
 
+    appendLeadingZeroes: (n) => {
+        return n < 10 ? '0' + n : n;
+    },
+
     secondsToTime: (seconds) => {
         var hh = Math.floor(seconds / 3600);
         var mm = Math.floor((seconds - (hh * 3600)) / 60);
         var ss = seconds - (hh * 3600) - (mm * 60);
 
-        if (hh < 10) { hh = '0' + hh; }
-        if (mm < 10) { mm = '0' + mm; }
-        if (ss < 10) { ss = '0' + ss; }
+        return generation.appendLeadingZeroes(hh) + ':' +
+            generation.appendLeadingZeroes(mm) + ':' +
+            generation.appendLeadingZeroes(ss);
+    },
 
-        return hh + ':' + mm + ':' + ss;
+    secondsToDateTime: (seconds) => {
+        var dateTime = new Date(0);
+
+        dateTime.setSeconds(seconds);
+
+        return dateTime.getFullYear() + '-' +
+            generation.appendLeadingZeroes(dateTime.getMonth() + 1) + '-' +
+            generation.appendLeadingZeroes(dateTime.getDate()) + ' ' +
+            generation.appendLeadingZeroes(dateTime.getHours()) + ':' +
+            generation.appendLeadingZeroes(dateTime.getMinutes()) + ':' +
+            generation.appendLeadingZeroes(dateTime.getSeconds());
     }
 }
 
